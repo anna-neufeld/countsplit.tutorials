@@ -6,7 +6,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tutorial: count splitting with seurat • countsplit.tutorials</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css" integrity="sha256-bZLfwXAP04zRMK2BjiO8iu9pf4FbLqX6zitd+tIvLhE=" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
@@ -40,31 +40,19 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
 <li>
-  <a href="../reference/index.html">Reference</a>
+  <a href="../articles/countsplit_tutorial.html">Introductory tutorial</a>
 </li>
-<li class="dropdown">
-  <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-    Articles
-     
-    <span class="caret"></span>
-  </a>
-  <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/countsplit_tutorial.html">Tutorial: differential expression analysis on single cell RNA-seq data</a>
-    </li>
-    <li>
-      <a href="../articles/demonstrating_problem.html">Demonstrating the issue with the double dipping suggested in the Seurat and Monocle3 vignettes.</a>
-    </li>
-    <li>
-      <a href="../articles/monocle3_tutorial.html">Tutorial: countsplitting with Monocle3</a>
-    </li>
-    <li>
-      <a href="../articles/scran_tutorial.html">Tutorial: countsplitting and scran</a>
-    </li>
-    <li>
-      <a href="../articles/seurat_tutorial.html">Tutorial: count splitting with seurat</a>
-    </li>
-  </ul>
+  <a href="../articles/seurat_tutorial.html">Seurat tutorial</a>
+</li>
+<li>
+  <a href="../articles/scran_tutorial.html">Scran tutorial</a>
+</li>
+<li>
+  <a href="../articles/monocle3_tutorial.html">Monocle3 tutorial</a>
+</li>
+<li>
+  <a href="https://anna-neufeld.github.io/countsplit/reference/index.html" class="external-link">Reference</a>
 </li>
       </ul>
 <ul class="nav navbar-nav navbar-right"></ul>
@@ -134,7 +122,7 @@
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">pbmc.counts</span>, package<span class="op">=</span><span class="st">"countsplit"</span><span class="op">)</span></span></code></pre></div>
 <p>Seurat objects cannot handle gene names that have underscores in them. To avoid issues later in the tutorial (where we will need to use gene names to map between the training and test sets), we run the following code to replace all underscores with dashes in the gene names of the raw counts matrix.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">pbmc.counts</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">pbmc.counts</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu">stringr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/stringr/man/str_replace.html" class="external-link">str_replace_all</a></span><span class="op">(</span><span class="va">u</span>, <span class="st">"_"</span>,<span class="st">"-"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">pbmc.counts</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">pbmc.counts</span><span class="op">)</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu">stringr</span><span class="fu">::</span><span class="fu"><a href="https://stringr.tidyverse.org/reference/str_replace.html" class="external-link">str_replace_all</a></span><span class="op">(</span><span class="va">u</span>, <span class="st">"_"</span>,<span class="st">"-"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="applying-count-splitting-and-creating-a-seurat-object">Applying count splitting and creating a Seurat object<a class="anchor" aria-label="anchor" href="#applying-count-splitting-and-creating-a-seurat-object"></a>
@@ -272,7 +260,7 @@
 <p>To compare the two clusterings, we compute the adjusted Rand index (<span class="citation">Hubert and Arabie (1985)</span>) using only the cells that are included in the training set.</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">clusters.full.subset</span> <span class="op">&lt;-</span> <span class="va">clusters.full</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">pbmc.train</span><span class="op">)</span><span class="op">]</span> </span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/mclust/man/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">clusters.train</span>, <span class="va">clusters.full.subset</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://mclust-org.github.io/mclust/reference/adjustedRandIndex.html" class="external-link">adjustedRandIndex</a></span><span class="op">(</span><span class="va">clusters.train</span>, <span class="va">clusters.full.subset</span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## [1] 0.7692816</span></span></code></pre>
 <p>The high adjusted Rand index shows that the clusters obtained from the training set are similar to those obtained on the test set. The confusion matrix below shows that we can easily map the first 7 clusters on the full data to a corresponding cluster on the training data, and the full data has two additional (small) clusters that seem to have combined with cluster 6 in the training data.</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">

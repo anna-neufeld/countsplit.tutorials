@@ -1,7 +1,9 @@
-What is countsplit?
+Welcome to the tutorial website for the package ``countsplit``
 -----
 
-The ``countsplit`` R package splits an integer-valued matrix into a training matrix and a test matrix using binomial thinning. Under a Poisson assumption, the training and test matrices are independent. 
+For the main package website, please visit [https://anna-neufeld.github.io/countsplit/](https://anna-neufeld.github.io/countsplit/). 
+
+The ``countsplit`` R package splits an integer-valued matrix into a training matrix and a test matrix using binomial thinning. Under a Poisson assumption, the training and test matrices are independent. The package is currently being updated to also include methodology for data that follow a negative binomial distribution. 
 
 The motivation for this method is described in Neufeld et al., 2022 [(link to paper)](http://arxiv.org/abs/2207.00554) in the context of inference after latent variable estimation for single cell RNA sequencing data. Briefly, count splitting allows users to perform differential expression analysis to see which genes vary across estimated cell types (such as those obtained via clustering) or along an estimated cellular trajectory (pseudotime). 
 
@@ -15,6 +17,13 @@ Make sure that ``remotes`` is installed by running ``install.packages("remotes")
 remotes::install_github("anna-neufeld/countsplit")
 ```
 
+To also download the data needed to reproduce the package vignettes, be sure to also install the ``countsplit.tutorials" package.
+
+```{r}
+remotes::install_github("anna-neufeld/countsplit.tutorials"). 
+```
+
+
 Where can I learn more? 
 -----
 
@@ -25,10 +34,14 @@ Please see the [double dipping demonstration](demonstrating_problem.html) for th
 
 Please visit [https://github.com/anna-neufeld/countsplit_paper](https://github.com/anna-neufeld/countsplit_paper) for code to reproduce the figures and tables from our paper. 
 
+Tutorials for negative binomial distributed data are coming soon!
+
 References 
 ----
 
 Neufeld, A.,Gao, L., Popp, J., Battle, A. & Witten, D. (2022), ‘Inference after latent variable estimation for single-cell RNA sequencing data’, Biostatistics. 
+
+Neufeld, A.,Dharamshi, A., Gao, L., & Witten, D. (2023), ‘Data thinning for convolution-closed distributions’, https://arxiv.org/abs/2301.07276/ . 
 
 
 

@@ -25,8 +25,5 @@ navbar:
     monocle3:
       text: Monocle3 tutorial
       href: articles/monocle3_tutorial.html
-    reference:
-      text: Reference
-      href: https://anna-neufeld.github.io/countsplit/reference/index.html
       
 

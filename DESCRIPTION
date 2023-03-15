@@ -1,5 +1,5 @@
 Package: countsplit.tutorials
-Title: Stores the data and tutorials associated with the package `countsplit`. 
+Title: Stores the data and tutorials associated with the package `countsplit` 
 Version: 1.0
 Authors@R: 
     person("Anna", "Neufeld", , "aneufeld@uw.edu", role = c("aut", "cre"))
@@ -8,3 +8,14 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.2.0
+VignetteBuilder: knitr
+Imports:
+  speedglm,
+  MASS,
+  countsplit,
+  igraph,
+  scran, 
+  stringr
+Suggests:
+  knitr  
+  

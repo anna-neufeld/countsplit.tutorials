@@ -42,11 +42,12 @@ Next, you should load the package, along with others that we will use in this tu
 library(scran)
 library(tidyverse)
 library(countsplit)
+library(countsplit.tutorials)
 ```
 
 # Load the data and perform count splitting
 
-This data is included in this package as a `SingleCellExperiment` object, so it is simple to load. 
+This data is included in the `countsplit_tutorials` package as a `SingleCellExperiment` object, so it is simple to load. 
 
 ```{r}
 data(cm)
@@ -67,14 +68,14 @@ table(cm$individual)
 table(cm$diffday)
 ```
 
-To perform count splitting we wish to extract only the count matrix. 
+To perform Poisson count splitting we wish to extract only the count matrix. 
 
 ```{r}
 set.seed(1)
 X <- counts(cm)
-split <- countsplit(X, epsilon=0.5)
-Xtrain <- split$train
-Xtest <- split$test
+split <- countsplit(X)
+Xtrain <- split[[1]]
+Xtest <- split[[2]]
 ```
 
 

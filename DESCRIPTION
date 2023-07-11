@@ -1,6 +1,6 @@
 Package: countsplit.tutorials
 Title: Stores the data and tutorials associated with the package `countsplit` 
-Version: 1.0
+Version: 2.0
 Authors@R: 
     person("Anna", "Neufeld", , "aneufeld@uw.edu", role = c("aut", "cre"))
 Description: What the package does (one paragraph).

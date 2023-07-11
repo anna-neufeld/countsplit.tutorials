@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 ```
 
-In this tutorial, we use two simple simulated data sets to demonstrate how to use the countsplit package and base R functions (e.g. glm, kmeans) to cluster and test for differential expression in scRNA-seq data. See our other tutorials on this website to learn how to integrate the countsplit package into three existing scRNA-seq data analysis workflows in R: `Seurat`, `scran`, and `monocle3`.
+In this tutorial, we use two simple simulated data sets to demonstrate how to use the countsplit package and base R functions (e.g. glm, kmeans) to cluster and test for differential expression in scRNA-seq data. See our other introductory tutorial for details of how to use the countsplit package to do cross-validation to evaluate the output of a clustering. See the non-introductory tutorials on this website to learn how to integrate the countsplit package into three existing scRNA-seq data analysis workflows for differential expression analysis in R: `Seurat`, `scran`, and `monocle3`.
 .
 We start by loading the packages we will be working with. Make sure that ``remotes`` is installed by running ``install.packages("remotes")``, then type
 
@@ -25,11 +25,12 @@ remotes::install_github("anna-neufeld/countsplit")
 
 ```{r, message=FALSE}
 library(countsplit)
+library(Matrix)
 library(ggplot2)
 library(patchwork)
 ```
 
-# Simulated data with no true signal. 
+# Simulated Poisson data with no true signal. 
 
 First suppose that we have $n=1000$ cells and $p=200$ genes. Suppose that every count $\textbf{X}_{ij}$ is drawn from a $\text{Poisson}(5)$ distribution. We first generate this data. 
 
@@ -57,21 +58,22 @@ The first line clusters the cells by applying k-means clustering with k=2 on the
 Even in these first 6 rows of results, we can see that the naive method assigns small p-values to many genes, despite the fact that no genes are truly differentially expressed in this data. We can make a uniform QQ-plot of the p-values for the naive method to see that they are not uniformly distributed and thus do not control the Type 1 error. 
 
 ```{r}
-ggplot(data=NULL, aes(sample=results.naive[,4]))+geom_qq(distribution="qunif")+geom_abline(col="red")
+ggplot(data=NULL, aes(sample=results.naive[,4]))+geom_qq(distribution=stats::qunif)+geom_abline(col="red")
 ```
 
-## Count splitting 
+## Poisson count splitting 
 
-We now address the issue using count splitting. The key steps are (1) running the ``countsplit`` function to get ``Xtrain`` and ``Xtest`` and then (2) clustering the data using `Xtrain`, and then fitting a GLM to test for association between those clusters and each column of `Xtest`. The ``countsplit`` function returns a list, which we call ``split`` here, which contains the training set and the test set.
+We now address the issue using count splitting. In this section, we will (correctly) assume that the data follow a Poisson distribution. In the next section, we will consider the case where the data actually follow a negative binomial distribution. 
 
-The parameter `epsilon`, which must fall between 0 and 1, governs the relative amount of information from `X` that goes into the training set. When `epsilon` is very close to 0, the training matrix will be extremely sparse and the test matrix will look a lot like `X`. When epsilon is very close to 1, the training matrix will be nearly identical to `X`, but the test matrix will be extremely sparse. The default in the `countsplit` function is to set epsilon=0.5. See [our preprint](https://arxiv.org/abs/2207.00554) for more information.  
+The key steps are (1) running the ``countsplit`` function to get ``Xtrain`` and ``Xtest`` and then (2) clustering the data using `Xtrain`, and then fitting a GLM to test for association between those clusters and each column of `Xtest`. The ``countsplit`` function returns a list, which we call ``split`` here, which contains the training set and the test set.
+
+Since we only want a single training set and a single test set, we will set ``folds=2`` when calling ``countsplit``. By default, this creates two identically distributed folds that each store half of the information in the dataset. We can change the amount of information allocated to the two folds by changing the `epsilion` parameter. When `epsilon` is very close to 0, the training matrix will be extremely sparse and the test matrix will look a lot like `X`. When epsilon is very close to 1, the training matrix will be nearly identical to `X`, but the test matrix will be extremely sparse. The default in the `countsplit` function is to set `epsilon=c(0.5, 0.5)`. See [our preprint](https://arxiv.org/abs/2207.00554) for more information.  
 
 ```{r}
 set.seed(2)
-split <- countsplit(X, epsilon=0.5)
-names(split)
-Xtrain <- split$train
-Xtest <- split$test
+split <- countsplit(X, folds=2, epsilon=c(0.5,0.5))
+Xtrain <- split[[1]]
+Xtest <- split[[2]]
 ```
 
 Like before, we will cluster using k-means with log-transformed data and we will fit Poisson GLMs for differential expression. Unlike before, we will run the clustering on `Xtrain` and use `Xtest` as the response in our GLMs.
@@ -86,14 +88,90 @@ We can see from the summary output that the p-values for the first 6 genes are m
 
 
 ```{r}
-ggplot(data=NULL, aes(sample=results.countsplit[,4]))+geom_qq(distribution="qunif")+geom_abline(col="red")
+ggplot(data=NULL, aes(sample=results.countsplit[,4]))+geom_qq(distribution=stats::qunif)+geom_abline(col="red")
 ```
 
+The crucial property that ensures that count splitting controls the Type 1 error in this setting is independence between `Xtrain` and `Xtest`. We can see that the columns of `Xtrain` are independent of the columns of `Xtest` in this data with no signal by looking at the sample correlations, which are centered around $0$. 
+
+```{r}
+cors <- sapply(1:p, function(u) cor(Xtrain[,u], Xtest[,u]))
+hist(cors, xlim=c(-1,1))
+```
 In summary, count splitting controls the Type 1 error when there is no true signal in the data. 
 
-# Simulated data with true signal
+# Simulated negative binomial data with no true signal
 
-We now demonstrate the performance of count splitting on a simple simulated dataset that contains two true clusters. We first randomly assign the cells to one of two true clusters. We then generate data such that $X_{ij} \sim \mathrm{Poisson}(\Lambda_{ij})$. Genes 1-10 are differentially expressed-- for $j=1,\ldots,10$, $\Lambda_{ij} = 5$ for cells in cluster $0$ and $\Lambda_{ij}=10$ for cells in cluster $1$. Genes 11-200 are not differentially expressed ($\Lambda_{ij}=5$ for all cells). 
+We now generate data with no true signal, but we generate the data from a negative binomial distribution. We use the mean + overdispersion parameterization of the negative binomial, in which the mean is given by `mu` and the variance is given by `mu+mu^2/5`. 
+
+
+```{r}
+set.seed(1)
+n <- 1000
+p <- 200
+X <- matrix(rnbinom(n*p, mu=5, size=5), nrow=n)
+
+## Sanity check on parameterization
+mean(as.numeric(X))
+var(as.numeric(X))
+5+5^2/5
+```
+
+Once again, in this part of the tutorial, we will cluster the data to estimate cell types and then test for differential expression. Since there are no true cell types and no truly differentially expressed genes in this data (all genes and all cells have mean $5$), a test of differential expression that controls the Type 1 error rate should give uniformly distributed p-values on this data. We will compare the naive method to three version of count splitting.
+
+We first note that the naive method still fails to control the Type 1 error rate. We use a negative binomial GLM (as implemented in the `MASS` package, rather than a Poisson GLM, throughout this section).
+
+```{r}
+clusters.full <- kmeans(log(X+1), centers=2)$cluster
+results.naive <- t(apply(X, 2, function(u) summary(MASS::glm.nb(u~as.factor(clusters.full)))$coefficients[2,]))
+ggplot(data=NULL, aes(sample=results.naive[,4]))+geom_qq(distribution=stats::qunif)+geom_abline(col="red")
+```
+
+Unfortunately, we now also note that the default settings of count splitting will cause us to fail to control the Type 1 error rate. Note that we omit the arguments for ``folds`` and `epsilon` , because two equally sized folds is the default for count splitting. 
+
+```{r}
+set.seed(2)
+split <- countsplit(X)
+Xtrain <- split[[1]]
+Xtest <- split[[2]]
+clusters.train <- kmeans(log(Xtrain+1), centers=2)$cluster
+results.countsplit <- t(apply(Xtest, 2, function(u) summary(MASS::glm.nb(u~as.factor(clusters.train)))$coefficients[2,]))
+ggplot(data=NULL)+
+  geom_qq(aes(sample=results.naive[,4], col="Naive method"),
+  distribution=stats::qunif)+
+  geom_qq(aes(sample=results.countsplit[,4], col="Poisson count splitting"), distribution=stats::qunif)+
+  geom_abline(col="red")
+```
+
+By default, the `countsplit` function assumes that your data follow a Poisson distribution. Now that the data are not Poisson distributed, the default settings of ``countsplit`` fail to lead to independent training and test sets, as we can see by looking at the sample correlations between columns of `Xtrain` and columns of `Xtest`. These correlations will get worse as the amount of overdispersion in the negative binomial data increases. 
+
+```{r}
+cors <- sapply(1:p, function(u) cor(Xtrain[,u], Xtest[,u]))
+hist(cors, xlim=c(-1,1))
+```
+
+To deal with this, we must tell the ``countsplit`` function that our data are overdispersed. In this toy setting, we know the true value of the overdispersion parameter; it is $5$ for all genes. So we can perform the ideal version of negative binomial count splitting where we plug in the value of $5$ for every gene.
+
+```{r}
+set.seed(2)
+splitNB <- countsplit(X, overdisps=rep(5,p))
+Xtrain <- splitNB[[1]]
+Xtest <- splitNB[[2]]
+clusters.train <- kmeans(log(Xtrain+1), centers=2)$cluster
+results.countsplit.NB <- t(apply(Xtest, 2, function(u) summary(MASS::glm.nb(u~as.factor(clusters.train)))$coefficients[2,]))
+ggplot(data=NULL)+
+  geom_qq(aes(sample=results.naive[,4], col="Naive method"),
+  distribution=stats::qunif)+
+  geom_qq(aes(sample=results.countsplit[,4], col="Poisson count splitting"), distribution=stats::qunif)+
+    geom_qq(aes(sample=results.countsplit.NB[,4], col="Ideal NB count splitting"), distribution=stats::qunif)+
+  geom_abline(col="red")
+```
+
+We see that we have recovered Type 1 error control. Unfortunately, in practice, we typically will not know the true value of the overdispersion parameter and will instead need to plug in a gene-specific estimate. We address this issue in our other tutorials.
+
+
+# Simulated Poisson data with true signal
+
+We now return to the poisson setting, for simplicity. We demonstrate the performance of count splitting on a simple simulated dataset that contains two true clusters. We first randomly assign the cells to one of two true clusters. We then generate data such that $X_{ij} \sim \mathrm{Poisson}(\Lambda_{ij})$. Genes 1-10 are differentially expressed-- for $j=1,\ldots,10$, $\Lambda_{ij} = 5$ for cells in cluster $0$ and $\Lambda_{ij}=10$ for cells in cluster $1$. Genes 11-200 are not differentially expressed ($\Lambda_{ij}=5$ for all cells). 
 
 ```{r}
 set.seed(1)
@@ -105,12 +183,12 @@ Lambda[clusters.true==1, 1:10] <- 10
 X <-apply(Lambda,1:2,rpois,n=1)
 ```
 
-We now count split the data and save `Xtrain` and `Xtest` for later use.
+We now count split the data and save `Xtrain` and `Xtest` for later use. Note that we don't actually need to specify that we want two folds of data, as this is the default setting. 
 
 ```{r}
-split <- countsplit(X, epsilon=0.5)
-Xtrain <- split$train
-Xtest <- split$test
+split <- countsplit(X)
+Xtrain <- split[[1]]
+Xtest <- split[[2]]
 ```
 
 ## Effect of using Xtrain for cluster estimation. 
@@ -186,6 +264,9 @@ p1 + p2 + plot_layout(guides="collect") & theme_bw()
 ```
 
 Overall, we see general agreement between the parameters estimated via countsplitting and those estimated via the ideal method. The slopes tend to be the same, whereas the intercepts are shifted by `log(0.5)`, as expected based on [our preprint](https://arxiv.org/abs/2207.00554). The slopes are the quantities that we care to do inference on, as they measure differential expression across clusters. 
+
+
+#
 
 
 

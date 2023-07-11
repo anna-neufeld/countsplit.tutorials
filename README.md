@@ -3,9 +3,11 @@ Welcome to the tutorial website for the package ``countsplit``
 
 For the main package website, please visit [https://anna-neufeld.github.io/countsplit/](https://anna-neufeld.github.io/countsplit/). 
 
-The ``countsplit`` R package splits an integer-valued matrix into a training matrix and a test matrix using binomial thinning. Under a Poisson assumption, the training and test matrices are independent. The package is currently being updated to also include methodology for data that follow a negative binomial distribution. 
+The ``countsplit`` R package splits an integer-valued matrix into two or more folds of data that can be used for cross validation or for inference after latent variable estimation. If the entries in the original matrix follow a Poisson or a negative binomial distribution with known overdispersion parameter, then the folds of data will be independent and the inference or validation will be valid. The ability to handle negative binomial data and more than two folds of data is a new feature of the `countsplit` package; please read the new documentation carefully if you are an existing user.
 
-The motivation for this method is described in Neufeld et al., 2022 [(link to paper)](http://arxiv.org/abs/2207.00554) in the context of inference after latent variable estimation for single cell RNA sequencing data. Briefly, count splitting allows users to perform differential expression analysis to see which genes vary across estimated cell types (such as those obtained via clustering) or along an estimated cellular trajectory (pseudotime). 
+The motivation for this method is described in Neufeld et al., 2022 [(link to paper)](http://arxiv.org/abs/2207.00554) in the context of inference after latent variable estimation for Poisson distributed single cell RNA sequencing data. Briefly, count splitting allows users to perform differential expression analysis to see which genes vary across estimated cell types (such as those obtained via clustering) or along an estimated cellular trajectory (pseudotime). Additional motivation, along with the extension to negative binomial data, is described in Neufeld et al., 2023 [(link to paper coming soon)](...).
+
+The tutorials on this website currently focus on the Poisson setting and on the inference after latent variable estimation setting, but they are being updated to include more negative binomial examples and more cross validation examples. 
 
 
 How can I get countsplit?
@@ -30,11 +32,10 @@ Where can I learn more?
 See the [introductory tutorial](articles/countsplit_tutorial.html) tab for an introduction to our framework on simple simulated data. See the [seurat](articles/seurat_tutorial.html),
 [scran](articles/scran_tutorial.html), and [monocle3](articles/monocle3_tutorial.html) tutorials for examples of how the count splitting package can be integrated with common scRNA-seq analysis pipelines. 
 
-Please see the [double dipping demonstration](demonstrating_problem.html) for the code that goes with Appendix A of our paper. 
+Please see the [double dipping demonstration](demonstrating_problem.html) for the code that goes with Appendix A of Neufeld et al., 2022. 
 
-Please visit [https://github.com/anna-neufeld/countsplit_paper](https://github.com/anna-neufeld/countsplit_paper) for code to reproduce the figures and tables from our paper. 
+Please visit [https://github.com/anna-neufeld/countsplit_paper](https://github.com/anna-neufeld/countsplit_paper) for code to reproduce the figures and tables from Neufeld et al., 2022. Please visit [https://github.com/anna-neufeld/nbcs_paper_simulations](https://github.com/anna-neufeld/nbcs_paper_simulations) for code to reproduce the figures and tables from Neufeld et al., 2023. 
 
-Tutorials for negative binomial distributed data are coming soon!
 
 References 
 ----

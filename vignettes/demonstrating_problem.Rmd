@@ -31,6 +31,7 @@ We illustrate below that our method controls the Type 1 error rate while the met
 library(monocle3)
 library(tidyverse)
 library(countsplit)
+library(Matrix)
 
 n=500
 p=200
@@ -49,8 +50,8 @@ for (i in 1:n_trials) {
   rownames(X) <- paste("gene", 1:p, sep="")
   
   cs <- countsplit(X)
-  Xtrain <- cs$train 
-  Xtest <- cs$test
+  Xtrain <- cs[[1]]
+  Xtest <- cs[[2]]
   
   # Create Monocle3 objects
   cds <- new_cell_data_set(X)
@@ -60,7 +61,7 @@ for (i in 1:n_trials) {
   ## Pre-processing and pseudotime estimation
   cds <- preprocess_cds(cds)
   cds <- reduce_dimension(cds)
-  cds <- cluster_cells(cds)
+  cds <- cluster_cells(cds, cluster_method="louvain")
   cds <- learn_graph(cds)
   cds <- order_cells(cds, root_cells="cell1")
   ## Differential expression testing. 
@@ -71,7 +72,7 @@ for (i in 1:n_trials) {
   ## Pre-processing and pseudotime estimation
   cds_train <- preprocess_cds(cds_train)
   cds_train <- reduce_dimension(cds_train)
-  cds_train <- cluster_cells(cds_train)
+  cds_train <- cluster_cells(cds_train, cluster_method="louvain")
   cds_train <- learn_graph(cds_train)
   cds_train <- order_cells(cds_train, root_cells="cell1")
   
@@ -88,10 +89,10 @@ for (i in 1:n_trials) {
 
 Now that we have carried out the simulation study, we make a uniform QQ-plot of the results. 
 
-```{r}
+```{r, out.width="50%"}
 ggplot(data=NULL)+
-  geom_qq(aes(sample=as.numeric(pvals_graph_test_doubledip), col="Double Dipping"), distribution="qunif")+
-  geom_qq(distribution="qunif", aes(sample=as.numeric(pvals_graph_test_countsplit), col="Count Splitting"))+
+  geom_qq(aes(sample=as.numeric(pvals_graph_test_doubledip), col="Double Dipping"), distribution=stats::qunif)+
+  geom_qq(distribution=stats::qunif, aes(sample=as.numeric(pvals_graph_test_countsplit), col="Count Splitting"))+
   geom_abline()+
   coord_fixed()+
   labs(col="")+theme_bw()+
@@ -120,9 +121,10 @@ for (i in 1:n_trials) {
   colnames(X) <- paste("cell", 1:n, sep="")
   rownames(X) <- paste("gene", 1:p, sep="")
   
-  ep=0.5
-  Xtrain <- apply(X, 2, function(u) rbinom(length(u), u, ep))
-  Xtest <- X - Xtrain
+  split <- countsplit(X, folds=2, epsilon=c(0.5,0.5))
+  Xtrain <- split[[1]]
+  Xtest <- split[[2]]
+  
   colnames(Xtrain) <- paste("cell", 1:n, sep="")
   rownames(Xtrain) <- paste("gene", 1:p, sep="")
   colnames(Xtest) <- paste("cell", 1:n, sep="")
@@ -160,10 +162,10 @@ for (i in 1:n_trials) {
 ```
 
 
-```{r}
+```{r, out.width="50%"}
 ggplot(data=NULL)+
-  geom_qq(aes(sample=as.numeric(pvals_doubledip), col="Double dipping"), distribution="qunif")+
-  geom_qq(distribution="qunif", aes(sample=as.numeric(pvals_countsplit), col="Count splitting"))+
+  geom_qq(aes(sample=as.numeric(pvals_doubledip), col="Double dipping"), distribution=stats::qunif)+
+  geom_qq(distribution=stats::qunif, aes(sample=as.numeric(pvals_countsplit), col="Count splitting"))+
   geom_abline()+
   coord_fixed()+
   labs(col="")+theme_bw()+

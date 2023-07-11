@@ -50,14 +50,15 @@ library(countsplit)
 library(ggplot2)
 library(patchwork)
 library(mclust)
+library(countsplit.tutorials)
 ```
 
 # Loading the data
 
-We first load the `pbmc` data that was used in the Seurat [clustering tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html). For convenience, we included the `pbmc` dataset raw counts (obtained from 10x genomics) in the `countsplit` package, and can be loaded as follows: 
+We first load the `pbmc` data that was used in the Seurat [clustering tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html). For convenience, we included the `pbmc` dataset raw counts (obtained from 10x genomics) in the `countsplit.tutorials` package, and can be loaded as follows: 
 
 ```{r}
-data(pbmc.counts, package="countsplit")
+data(pbmc.counts, package="countsplit.tutorials")
 ```
 
 Seurat objects cannot handle gene names that have underscores in them. To avoid issues later in the tutorial (where we will need to use gene names to map between the training and test sets), we run the following code to replace all underscores with dashes in the gene names of the raw counts matrix. 
@@ -68,13 +69,13 @@ rownames(pbmc.counts) <- sapply(rownames(pbmc.counts), function(u) stringr::str_
 
 # Applying count splitting and creating a Seurat object
 
-We now count split to obtain two raw count matrices. This is the only place in this tutorial where we use the `countsplit` package. 
+We now count split to obtain two raw count matrices. This is the only place in this tutorial where we use the `countsplit` package. We use the default settings, which assumes that the data follow a Poisson distribution and makes two identically distributed folds of data. 
 
 ```{r, collapse=TRUE}
 set.seed(1)
-split <- countsplit(pbmc.counts, epsilon=0.5)
-Xtrain <- split$train
-Xtest <- split$test
+split <- countsplit(pbmc.counts)
+Xtrain <- split[[1]]
+Xtest <- split[[2]]
 ```
 
 We must store the training matrix in a Seurat object so that we can apply the preprocessing steps from the Seurat clustering tutorial. As recommended by Seurat, this code will remove any genes that were not expressed in at least `3` cells and will remove any cells that did not have at least `200` expressed genes. 

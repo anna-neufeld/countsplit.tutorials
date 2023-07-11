@@ -38,19 +38,26 @@ cell_metadata <- readRDS(url("https://depts.washington.edu:/trapnell-lab/softwar
 gene_annotation <- readRDS(url("https://depts.washington.edu:/trapnell-lab/software/monocle3/celegans/data/packer_embryo_rowData.rds"))
 ```
 
-We now deviate from the Monocle3 vignette to apply count splitting. We apply count splitting directly to the raw expression matrix. We then construct a `cell_data_set` object (used by the Monocle3 package) that contains only the training set counts. 
+We now deviate from the Monocle3 vignette to apply count splitting. We apply Poisson count splitting directly to the raw expression matrix. We then construct a `cell_data_set` object (used by the Monocle3 package) that contains only the training set counts. 
 
 ```{r}
 epsilon=0.5
 set.seed(1)
-Xtrain <-apply(expression_matrix,2,function(u) rbinom(n=length(u), size=u, p=epsilon))
-Xtest <- expression_matrix-Xtrain
+
+#Xtrain <-apply(expression_matrix,2,function(u) rbinom(n=length(u), size=u, p=epsilon))
+#Xtest <- expression_matrix-Xtrain
+
+split.pcs <- countsplit(expression_matrix)
+Xtrain <- split.pcs[[1]]
+Xtest <- split.pcs[[2]]
 cds_train <- new_cell_data_set(
   Xtrain,
   cell_metadata = cell_metadata,
   gene_metadata = gene_annotation
 )
 ```
+
+This pipeline assumes that the data are reasonably close to following a Poisson distribution. At the bottom of this tutorial, we consider applying negative binomial count splitting. 
 
 
 # Preprocess the data
@@ -81,10 +88,10 @@ plot_cells(cds_train,
 
 # Estimate pseudotime 
 
-In this section, we use the training dataset to learn the graph that will be used to estimate pseudotime. For simplicity in this tutorial, we would like to only have one pseudotime trajectory with one root node. Thus, we add the `use_partition=FALSE` argument to the `learn_graph` function to ensure that our graph is made up of a single connected trajectory. 
+In this section, we use the training dataset to learn the graph that will be used to estimate pseudotime. For simplicity in this tutorial, we would like to only have one pseudotime trajectory with one root node. Thus, we add the `use_partition=FALSE` argument to the `learn_graph` function to ensure that our graph is made up of a single connected trajectory. We use Louvain clustering, rather than the default Leiden clustering of ``cluster_cells``, to avoid a recent error with the Monocle3 package and the implementation of Leiden clustering.
 
 ```{r, results='hide'}
-cds_train <- cluster_cells(cds_train)
+cds_train <- cluster_cells(cds_train, cluster_method="louvain")
 cds_train <- learn_graph(cds_train, use_partition=FALSE)
 ```
 
@@ -170,3 +177,15 @@ plot_genes_in_pseudotime(AFD_lineage_cds,                          color_cells_b
 
 
 The analysis in this tutorial identifies differentially expressed genes without double dipping in the data, and thus improves upon the analysis in the  Monocle3 [vignette](https://cole-trapnell-lab.github.io/monocle3/docs/trajectories/). 
+
+
+# Considering negative binomial count splitting
+
+In order to apply negative binomial count splitting, the first step is to estimate overdispersion parameters. We do this using the ``sctransform`` package, which can be installed from CRAN. 
+
+```{r}
+library(sctransform)
+
+vst <- sctransform::vst(expression_matrix)
+overdisp_estimates <- vst$model_pars_fit[,1]
+```

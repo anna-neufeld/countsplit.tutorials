@@ -44,5 +44,9 @@ Neufeld, A.,Gao, L., Popp, J., Battle, A. & Witten, D. (2022), ‘Inference afte
 
 Neufeld, A.,Dharamshi, A., Gao, L., & Witten, D. (2023), ‘Data thinning for convolution-closed distributions’, https://arxiv.org/abs/2301.07276/ . 
 
+Neufeld, A., Popp, J., Gao, L., Battle, A. & Witten, D. (2023), ‘Negative binomial count splitting for single-cell RNA sequencing data'. 
+
+
+
 
 

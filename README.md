@@ -32,7 +32,7 @@ Where can I learn more?
 See the [introductory tutorial](articles/countsplit_tutorial.html) tab for an introduction to our framework on simple simulated data. See the [seurat](articles/seurat_tutorial.html),
 [scran](articles/scran_tutorial.html), and [monocle3](articles/monocle3_tutorial.html) tutorials for examples of how the count splitting package can be integrated with common scRNA-seq analysis pipelines. 
 
-Please see the [double dipping demonstration](demonstrating_problem.html) for the code that goes with Appendix A of Neufeld et al., 2022. 
+Please see the [double dipping demonstration](articles/demonstrating_problem.html) for the code that goes with Appendix A of Neufeld et al., 2022. 
 
 Please visit [https://github.com/anna-neufeld/countsplit_paper](https://github.com/anna-neufeld/countsplit_paper) for code to reproduce the figures and tables from Neufeld et al., 2022. Please visit [https://github.com/anna-neufeld/nbcs_paper_simulations](https://github.com/anna-neufeld/nbcs_paper_simulations) for code to reproduce the figures and tables from Neufeld et al., 2023. 
 

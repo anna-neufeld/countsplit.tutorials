@@ -40,7 +40,10 @@
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
 <li>
-  <a href="../articles/countsplit_tutorial.html">Introductory differential expression tutorial</a>
+  <a href="../articles/countsplit_tutorial.html">Differential expression tutorial</a>
+</li>
+<li>
+  <a href="../articles/MSE_tutorial.html">Cross validation tutorial</a>
 </li>
 <li>
   <a href="../articles/seurat_tutorial.html">Seurat tutorial</a>
@@ -82,12 +85,12 @@ single cell RNA-seq data</h1>
 <p>In this tutorial, we use two simple simulated data sets to
 demonstrate how to use the countsplit package and base R functions
 (e.g. glm, kmeans) to cluster and test for differential expression in
-scRNA-seq data. See our other introductory tutorial for details of how
-to use the countsplit package to do cross-validation to evaluate the
-output of a clustering. See the non-introductory tutorials on this
-website to learn how to integrate the countsplit package into three
-existing scRNA-seq data analysis workflows for differential expression
-analysis in R: <code>Seurat</code>, <code>scran</code>, and
+scRNA-seq data. See our [cross-validation tutorial]((<a href="https://anna-neufeld.github.io/countsplit.tutorials/articles/MSE_tutorial.html" class="external-link uri">https://anna-neufeld.github.io/countsplit.tutorials/articles/MSE_tutorial.html</a>)
+for details on how to use the countsplit package to evaluate the output
+of a clustering. See the non-introductory tutorials on this website to
+learn how to integrate the countsplit package into three existing
+scRNA-seq data analysis workflows for differential expression analysis
+in R: <code>Seurat</code>, <code>scran</code>, and
 <code>monocle3</code>. . We start by loading the packages we will be
 working with. Make sure that <code>remotes</code> is installed by
 running <code>install.packages("remotes")</code>, then type</p>
@@ -312,13 +315,66 @@ value of <span class="math inline">\(5\)</span> for every gene.</p>
 <p>We see that we have recovered Type 1 error control. Unfortunately, in
 practice, we typically will not know the true value of the
 overdispersion parameter and will instead need to plug in a
-gene-specific estimate. We address this issue in our other
-tutorials.</p>
+gene-specific estimate. A common way to estimate gene-specific
+overdispersion parameters is with the <code>sctransform</code> package
+in <code>R</code>. More specifically, if we call the <code>vst()</code>
+function from the <code>sctransform</code> package on the gene-by-cell
+matrix of counts (the transpose of <span class="math inline">\(X\)</span>, in this case), the estimated
+gene-specific overdispersion paramateters are stored in the first column
+of the <code>model_pars</code> section of the output.</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">rownames</span>(X) <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span>n</span>
+<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="fu">colnames</span>(X) <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span>p</span>
+<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>overdisps.est <span class="ot">&lt;-</span> sctransform<span class="sc">::</span><span class="fu">vst</span>(<span class="fu">t</span>(X))<span class="sc">$</span>model_pars[,<span class="dv">1</span>]</span>
+<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>  <span class="sc">|</span>                                                                            </span>
+<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>  <span class="er">|</span>                                                                      <span class="er">|</span>   <span class="dv">0</span>%</span>
+<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>  <span class="sc">|</span>                                                                            </span>
+<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>  <span class="er">|======================================================================|</span> <span class="dv">100</span>%</span>
+<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a><span class="do">## </span></span>
+<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>  <span class="sc">|</span>                                                                            </span>
+<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>  <span class="er">|</span>                                                                      <span class="er">|</span>   <span class="dv">0</span>%</span>
+<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a>  <span class="sc">|</span>                                                                            </span>
+<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a>  <span class="er">|======================================================================|</span> <span class="dv">100</span>%</span></code></pre></div>
+<p>By default, the <code>vst()</code> function does not necessarily
+return an estimated overdispersion for every single gene in the dataset.
+For example, it only returns an estimated overdispersion for genes that
+were expressed in at least 5 cells, and that were not found to be
+approximately Poisson distributed. The code below verifies that, in this
+case, we did in fact recieve an estimated overdispersion for all
+cells.</p>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/all.equal-methods.html" class="external-link">all.equal</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">overdisps.est</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">## [1] TRUE</span></span></code></pre></div>
+<p>We can see that, in this case, the estimation of the overdispersion
+parameters went fairly well. All of the true overdispersion parameters
+are 5, and the estimated overdispersion parameters are all between <span class="math inline">\(4\)</span> and <span class="math inline">\(6\)</span>.</p>
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">overdisps.est</span><span class="op">)</span></span></code></pre></div>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-18-1.png" width="700"></p>
+<p>We are now prepared to apply negative binomial count splitting with
+these estimated parameters. We see that the performance is approximately
+as good as it was in the ideal version of negative binomial count
+splitting.</p>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">splitNB.est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/countsplit/man/countsplit.html" class="external-link">countsplit</a></span><span class="op">(</span><span class="va">X</span>, overdisps<span class="op">=</span><span class="va">overdisps.est</span><span class="op">)</span></span>
+<span><span class="va">Xtrain.est</span> <span class="op">&lt;-</span> <span class="va">splitNB.est</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">Xtest.est</span> <span class="op">&lt;-</span> <span class="va">splitNB.est</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span></span>
+<span><span class="va">clusters.train.est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html" class="external-link">kmeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">Xtrain.est</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span>, centers<span class="op">=</span><span class="fl">2</span><span class="op">)</span><span class="op">$</span><span class="va">cluster</span></span>
+<span><span class="va">results.countsplit.NB.est</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">Xtest.est</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">MASS</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MASS/man/glm.nb.html" class="external-link">glm.nb</a></span><span class="op">(</span><span class="va">u</span><span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">clusters.train.est</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span><span class="fl">2</span>,<span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data<span class="op">=</span><span class="cn">NULL</span><span class="op">)</span><span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">geom_qq</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample<span class="op">=</span><span class="va">results.naive</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span>, col<span class="op">=</span><span class="st">"Naive method"</span><span class="op">)</span>,</span>
+<span>  distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">geom_qq</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample<span class="op">=</span><span class="va">results.countsplit</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span>, col<span class="op">=</span><span class="st">"Poisson count splitting"</span><span class="op">)</span>, distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">geom_qq</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample<span class="op">=</span><span class="va">results.countsplit.NB</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span>, col<span class="op">=</span><span class="st">"Ideal NB count splitting"</span><span class="op">)</span>, distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span></span>
+<span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">geom_qq</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample<span class="op">=</span><span class="va">results.countsplit.NB.est</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span>, col<span class="op">=</span><span class="st">"Estimated NB count splitting"</span><span class="op">)</span>, distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_abline</a></span><span class="op">(</span>col<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-19-1.png" width="700"></p>
 </div>
 <div class="section level2">
 <h2 id="simulated-poisson-data-with-true-signal">Simulated Poisson data with true signal<a class="anchor" aria-label="anchor" href="#simulated-poisson-data-with-true-signal"></a>
 </h2>
-<p>We now return to the poisson setting, for simplicity. We demonstrate
+<p>We now return to the Poisson setting, for simplicity. We demonstrate
 the performance of count splitting on a simple simulated dataset that
 contains two true clusters. We first randomly assign the cells to one of
 two true clusters. We then generate data such that <span class="math inline">\(X_{ij} \sim
@@ -327,7 +383,7 @@ expressed– for <span class="math inline">\(j=1,\ldots,10\)</span>, <span class
 <span class="math inline">\(0\)</span> and <span class="math inline">\(\Lambda_{ij}=10\)</span> for cells in cluster
 <span class="math inline">\(1\)</span>. Genes 11-200 are not
 differentially expressed (<span class="math inline">\(\Lambda_{ij}=5\)</span> for all cells).</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
 <span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fl">200</span></span>
@@ -339,7 +395,7 @@ differentially expressed (<span class="math inline">\(\Lambda_{ij}=5\)</span> fo
 <code>Xtest</code> for later use. Note that we don’t actually need to
 specify that we want two folds of data, as this is the default
 setting.</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">split</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/countsplit/man/countsplit.html" class="external-link">countsplit</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span></span>
 <span><span class="va">Xtrain</span> <span class="op">&lt;-</span> <span class="va">split</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span>
 <span><span class="va">Xtest</span> <span class="op">&lt;-</span> <span class="va">split</span><span class="op">[[</span><span class="fl">2</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
@@ -349,7 +405,7 @@ setting.</p>
 <p>First, let’s look at the effect of count splitting on our ability to
 estimate the true clusters. If we use all of our data <code>X</code> to
 estimate the clusters, we make only 5 errors.</p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">clusters.full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html" class="external-link">kmeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">X</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span>, centers<span class="op">=</span><span class="fl">2</span><span class="op">)</span><span class="op">$</span><span class="va">cluster</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">clusters.true</span>, <span class="va">clusters.full</span><span class="op">)</span></span>
 <span><span class="co">##              clusters.full</span></span>
@@ -359,7 +415,7 @@ estimate the clusters, we make only 5 errors.</p>
 <p>If instead we use only <code>Xtrain</code> to estimate the clusters,
 we make a few additional errors, but we still come very close to
 estimating the true clusters.</p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">clusters.train</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html" class="external-link">kmeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">Xtrain</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span>, centers<span class="op">=</span><span class="fl">2</span><span class="op">)</span><span class="op">$</span><span class="va">cluster</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">clusters.true</span>, <span class="va">clusters.train</span><span class="op">)</span></span>
 <span><span class="co">##              clusters.train</span></span>
@@ -380,7 +436,7 @@ every gene on the true clusters; we save both the slope and the
 intercept. We are interested in the GLM slopes, as the GLM slopes are
 non-zero if the gene is differentially expressed across the
 clusters.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">coeffs.X</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">u</span><span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">clusters.true</span><span class="op">)</span>, family<span class="op">=</span><span class="st">"poisson"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">coeffs.Xtest</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">Xtest</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">u</span><span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">clusters.true</span><span class="op">)</span>, family<span class="op">=</span><span class="st">"poisson"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>The plot below shows that the slopes resulting from <code>X</code>
@@ -389,7 +445,7 @@ diagonal line <code>y=x</code> and so tend to be approximately equal to
 eachother. The intercepts, on the other hand, get shifted by
 <code>log(0.5)</code> when we use the <code>Xtest</code> rather than
 <code>X</code>. This is as we would expect (see Section 4.1 of <a href="https://arxiv.org/abs/2207.00554" class="external-link">our preprint</a>).</p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">differentially_expressed</span> <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">1</span>,<span class="fl">10</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">0</span>,<span class="fl">190</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data<span class="op">=</span><span class="cn">NULL</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">coeffs.X</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, y<span class="op">=</span><span class="va">coeffs.Xtest</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, col<span class="op">=</span><span class="va">differentially_expressed</span><span class="op">)</span><span class="op">)</span><span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span><span class="op">+</span></span>
@@ -405,7 +461,7 @@ eachother. The intercepts, on the other hand, get shifted by
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"Slopes from X"</span><span class="op">)</span><span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Slopes from Xtest"</span><span class="op">)</span><span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Slopes"</span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">p1</span> <span class="op">+</span> <span class="va">p2</span> <span class="op">+</span> <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>guides<span class="op">=</span><span class="st">"collect"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-21-1.png" width="700"></p>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-25-1.png" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="overall-comparison-of-count-splitting-to-ideal-method">Overall comparison of count splitting to ideal method<a class="anchor" aria-label="anchor" href="#overall-comparison-of-count-splitting-to-ideal-method"></a>
@@ -421,7 +477,7 @@ for convenience. Note also that we regress <code>Xtest</code> on
 the “cluster 1” in the training set maps to the “cluster 1” in the true
 clustering, and this consistency will ensure that the coefficients from
 the two models have the same sign.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">coeffs.ideal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">u</span><span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">clusters.true</span><span class="op">)</span>, family<span class="op">=</span><span class="st">"poisson"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">coeffs.countsplit</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">Xtest</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">u</span><span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">clusters.train</span><span class="op">==</span><span class="fl">1</span><span class="op">)</span>, family<span class="op">=</span><span class="st">"poisson"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">p1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data<span class="op">=</span><span class="cn">NULL</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x<span class="op">=</span><span class="va">coeffs.ideal</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, y<span class="op">=</span><span class="va">coeffs.countsplit</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span>, col<span class="op">=</span><span class="va">differentially_expressed</span><span class="op">)</span><span class="op">)</span><span class="op">+</span></span>
@@ -438,7 +494,7 @@ the two models have the same sign.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"Slopes from ideal method"</span><span class="op">)</span><span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Slopes from count splitting"</span><span class="op">)</span><span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Slopes"</span><span class="op">)</span></span>
 <span><span class="va">p1</span> <span class="op">+</span> <span class="va">p2</span> <span class="op">+</span> <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>guides<span class="op">=</span><span class="st">"collect"</span><span class="op">)</span> <span class="op">&amp;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-22-1.png" width="700"></p>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-26-1.png" width="700"></p>
 <p>Overall, we see general agreement between the parameters estimated
 via countsplitting and those estimated via the ideal method. The slopes
 tend to be the same, whereas the intercepts are shifted by

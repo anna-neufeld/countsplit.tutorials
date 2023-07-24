@@ -3,7 +3,7 @@ title: "Tutorial: differential expression analysis on single cell RNA-seq data"
 output: rmarkdown::html_vignette
 bibliography: latent.bib
 vignette: >
-  %\VignetteIndexEntry{"Tutorial: differential expression analysis on single cell RNA-seq data"}
+  %\VignetteIndexEntry{Tutorial: differential expression analysis on single cell RNA-seq data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
 ```
 
-In this tutorial, we use two simple simulated data sets to demonstrate how to use the countsplit package and base R functions (e.g. glm, kmeans) to cluster and test for differential expression in scRNA-seq data. See our other introductory tutorial for details of how to use the countsplit package to do cross-validation to evaluate the output of a clustering. See the non-introductory tutorials on this website to learn how to integrate the countsplit package into three existing scRNA-seq data analysis workflows for differential expression analysis in R: `Seurat`, `scran`, and `monocle3`.
+In this tutorial, we use two simple simulated data sets to demonstrate how to use the countsplit package and base R functions (e.g. glm, kmeans) to cluster and test for differential expression in scRNA-seq data. See our [cross-validation tutorial]((https://anna-neufeld.github.io/countsplit.tutorials/articles/MSE_tutorial.html) for details on how to use the countsplit package to evaluate the output of a clustering. See the non-introductory tutorials on this website to learn how to integrate the countsplit package into three existing scRNA-seq data analysis workflows for differential expression analysis in R: `Seurat`, `scran`, and `monocle3`.
 .
 We start by loading the packages we will be working with. Make sure that ``remotes`` is installed by running ``install.packages("remotes")``, then type
 
@@ -166,12 +166,47 @@ ggplot(data=NULL)+
   geom_abline(col="red")
 ```
 
-We see that we have recovered Type 1 error control. Unfortunately, in practice, we typically will not know the true value of the overdispersion parameter and will instead need to plug in a gene-specific estimate. We address this issue in our other tutorials.
+We see that we have recovered Type 1 error control. Unfortunately, in practice, we typically will not know the true value of the overdispersion parameter and will instead need to plug in a gene-specific estimate. A common way to estimate gene-specific overdispersion parameters is with the ``sctransform`` package in ``R``. More specifically, if we call the ``vst()`` function from the ``sctransform`` package on the gene-by-cell matrix of counts (the transpose of $X$, in this case), the estimated gene-specific overdispersion paramateters are stored in the first column of the ``model_pars`` section of the output. 
 
+```{r}
+rownames(X) <- 1:n
+colnames(X) <- 1:p
+overdisps.est <- sctransform::vst(t(X))$model_pars[,1]
+```
+
+By default, the ``vst()`` function does not necessarily return an estimated overdispersion for every single gene in the dataset. For example, it only returns an estimated overdispersion for genes that were expressed in at least 5 cells, and that were not found to be approximately Poisson distributed. The code below verifies that, in this case, we did in fact recieve an estimated overdispersion for all cells.
+
+```{r}
+all.equal(names(overdisps.est), colnames(X))
+```
+
+We can see that, in this case, the estimation of the overdispersion parameters went fairly well. All of the true overdispersion parameters are 5, and the estimated overdispersion parameters are all between $4$ and $6$. 
+
+```{r}
+hist(overdisps.est)
+```
+
+We are now prepared to apply negative binomial count splitting with these estimated parameters. We see that the performance is approximately as good as it was in the ideal version of negative binomial count splitting.
+
+```{r}
+set.seed(2)
+splitNB.est <- countsplit(X, overdisps=overdisps.est)
+Xtrain.est <- splitNB.est[[1]]
+Xtest.est <- splitNB.est[[2]]
+clusters.train.est <- kmeans(log(Xtrain.est+1), centers=2)$cluster
+results.countsplit.NB.est <- t(apply(Xtest.est, 2, function(u) summary(MASS::glm.nb(u~as.factor(clusters.train.est)))$coefficients[2,]))
+ggplot(data=NULL)+
+  geom_qq(aes(sample=results.naive[,4], col="Naive method"),
+  distribution=stats::qunif)+
+  geom_qq(aes(sample=results.countsplit[,4], col="Poisson count splitting"), distribution=stats::qunif)+
+    geom_qq(aes(sample=results.countsplit.NB[,4], col="Ideal NB count splitting"), distribution=stats::qunif)+
+    geom_qq(aes(sample=results.countsplit.NB.est[,4], col="Estimated NB count splitting"), distribution=stats::qunif)+
+  geom_abline(col="red")
+```
 
 # Simulated Poisson data with true signal
 
-We now return to the poisson setting, for simplicity. We demonstrate the performance of count splitting on a simple simulated dataset that contains two true clusters. We first randomly assign the cells to one of two true clusters. We then generate data such that $X_{ij} \sim \mathrm{Poisson}(\Lambda_{ij})$. Genes 1-10 are differentially expressed-- for $j=1,\ldots,10$, $\Lambda_{ij} = 5$ for cells in cluster $0$ and $\Lambda_{ij}=10$ for cells in cluster $1$. Genes 11-200 are not differentially expressed ($\Lambda_{ij}=5$ for all cells). 
+We now return to the Poisson setting, for simplicity. We demonstrate the performance of count splitting on a simple simulated dataset that contains two true clusters. We first randomly assign the cells to one of two true clusters. We then generate data such that $X_{ij} \sim \mathrm{Poisson}(\Lambda_{ij})$. Genes 1-10 are differentially expressed-- for $j=1,\ldots,10$, $\Lambda_{ij} = 5$ for cells in cluster $0$ and $\Lambda_{ij}=10$ for cells in cluster $1$. Genes 11-200 are not differentially expressed ($\Lambda_{ij}=5$ for all cells). 
 
 ```{r}
 set.seed(1)

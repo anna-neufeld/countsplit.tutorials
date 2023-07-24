@@ -15,7 +15,9 @@ Imports:
   countsplit,
   igraph,
   scran, 
-  stringr
+  stringr,
+  Matrix,
+  lemon
 Suggests:
   knitr  
   

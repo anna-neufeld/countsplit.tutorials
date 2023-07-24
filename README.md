@@ -29,7 +29,7 @@ remotes::install_github("anna-neufeld/countsplit.tutorials").
 Where can I learn more? 
 -----
 
-See the [introductory tutorial](articles/countsplit_tutorial.html) tab for an introduction to our framework on simple simulated data. See the [seurat](articles/seurat_tutorial.html),
+See the [introductory tutorial](articles/countsplit_tutorial.html) tab for an introduction to our framework on simple simulated data. This tutorial focuses on the setting where we wish to test genes for differential expression. See the [cross validation tutorial](articles/MSE_tutorial.html) for an additional introduction on simple simulated data, where the goal is instead to evaluate a given clustering model. See the [seurat](articles/seurat_tutorial.html),
 [scran](articles/scran_tutorial.html), and [monocle3](articles/monocle3_tutorial.html) tutorials for examples of how the count splitting package can be integrated with common scRNA-seq analysis pipelines. 
 
 Please see the [double dipping demonstration](articles/demonstrating_problem.html) for the code that goes with Appendix A of Neufeld et al., 2022. 

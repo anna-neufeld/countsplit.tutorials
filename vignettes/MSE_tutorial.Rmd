@@ -1,9 +1,9 @@
----
+---bui
 title: "Tutorial: cross-validation for single cell RNA-seq data via count splitting" 
 output: rmarkdown::html_vignette
 bibliography: latent.bib
 vignette: >
-  %\VignetteIndexEntry{"Tutorial: cross-validation for single cell RNA-seq data via count splitting"}
+  %\VignetteIndexEntry{Tutorial: cross-validation for single cell RNA-seq data via count splitting}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -12,19 +12,20 @@ vignette: >
 knitr::opts_chunk$set(
   collapse = TRUE
 )
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE,
+                      collapse=TRUE, fig.width=8, fig.align="center")
 ```
 
-In this tutorial, we use simple simulated datasets to show how to use count splitting to do cross-validation for unsupervised learning. 
+In this tutorial, we use simple simulated datasets to show how to use count splitting to do cross-validation for unsupervised learning. Make sure that the packages below are installed, and then proceed with loading the packages. 
 
 ```{r}
 library(countsplit)
 library(tidyverse)
 library(Matrix)
+library(lemon)
 ```
-We generate data from a negative binomial distribution. The data has three true clusters. 
 
-We start by generating the data, and we will make the data super simple. 
+We start by generating simple data from a negative binomial distribution. The data has three true clusters $(K^*=3)$. We generate data with only two genes ($p=2$) so that we can visualize the clusters more easily. Throughout this document, our goal is to estimate the true number of clusters $K^*$. 
 
 ```{r}
 library(tidyverse)
@@ -37,14 +38,20 @@ lambda[clusters==2,1] <-  exp(5)
 lambda[clusters==3,2] <-  exp(0.1)
 true.overdisps <- c(3,6)
 X <- sapply(1:p, function(u) rnbinom(length(lambda[,u]), mu=lambda[,u], size= true.overdisps[u]))
-ggplot(data=NULL, aes(x=X[,1]+1, y=X[,2]+1, col=as.factor(clusters)))+geom_point()+
-  scale_x_log10()+scale_y_log10()
+ggplot(data=NULL, aes(x=X[,1]+1, y=X[,2]+1, col=as.factor(clusters)))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  theme_bw()+
+  labs(col="True Cluster")+
+  xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")
 ```
-
 
 # Naive method
 
-There are three true clusters in the data. But if we don't know this, we may want to try out models with numbers of clusters ranging from 1 to 10 to see which one fits the data best. Unfortunately, if we estiamate the clusters and evaluate them on the same data, we get stuck. 
+In order to estimate $K^*$, we try out models with different numbers of clusters $k$ ranging from $1$ to $10$, so as to see which model best fits the observed data. Unfortunately, if we estimate the clusters and evaluate the clusters on the same data, models with more clusters (i.e. more complexity) will always appear better. Thus, our loss function curve decreases monotonically with the number of clusters, and we cannot simply pick the value of $k$ that minimizes the loss function. We demonstrate this issue below. 
+
+We will use within-cluster sum of squared errors (SSE) as our loss function. We implement this loss function here. Note that the within-cluster SSE is computed on a log scale. 
 
 ```{r}
 cluster.sse <- function(trainDat, testDat, clusters.est, eps.train) {
@@ -54,7 +61,7 @@ cluster.sse <- function(trainDat, testDat, clusters.est, eps.train) {
     clustdat.test <- testDat[clusters.est==lab,]
     clustdat.train <- trainDat[clusters.est==lab,]
     colmeansTrain <- apply(clustdat.train, 2, mean)
-    pred.means <- 1/eps.train*  colmeansTrain
+    pred.means <- 1/eps.train*colmeansTrain
     ss <- apply(1/(1-eps.train)*clustdat.test, 1,  function(u) sum((log(u+1)-log(pred.means+1))^2))
     totSS <- totSS+sum(ss)
     }
@@ -63,27 +70,40 @@ cluster.sse <- function(trainDat, testDat, clusters.est, eps.train) {
 }
 ```
 
+We first consider the naive method, which estimates clusters using all of the data, and then computes the SSE using all of the data. In the context of the function above, this means that ``trainDat=testDat=X``. 
+
 ```{r}
+set.seed(2)
 naive.res <- rep(NA, 10)
 for (k in 1:10) {
   clusters.est <- kmeans(log(X+1), centers=k)$cluster
   naive.res[k] <- cluster.sse(X,X,clusters.est, 0.5)
 }
-naive.res.norm <- (naive.res - min(naive.res))/(max(naive.res)-min(naive.res))
-ggplot(data=NULL, aes(x=1:10, y=naive.res.norm, col="naive"))+geom_point()+geom_line()+theme_bw()
+naive.res
 ```
 
+We normalize the SSE results such that they lie between $0$ and $1$. This will later facilitate comparisons between methods. We then ploot the results. As expected, this naive method leads to a within-cluster SSE that decreases monotonically with $k$, and thus leaves no clear strategy for estimating $K^*$. 
+
+```{r}
+naive.res.norm <- (naive.res - min(naive.res))/(max(naive.res)-min(naive.res))
+ggplot(data=NULL)+
+  geom_pointline(aes(x=1:10, y=naive.res.norm, col="Naive"))+
+  theme_bw()+
+  ylab("Within-cluster SSE")+
+  xlab("Number of cluster (k)")+
+  geom_vline(aes(xintercept=3))+
+  labs(col="Method")+
+  scale_x_continuous(breaks=0:11)
+```
 
 # Count splitting (two folds)
 
-A single train/test split can go a long way in helping us with this. 
+Splitting our data into a training set and a test set can help us avoid this issue. 
 
-
-
-
-We compare a version where we assume Poisson to two NB versions. 
+We first consider Poisson count splitting. We note that, since the data are not actually Poisson distributed, we do not expect Poisson count splitting to solve our problem. 
 
 ```{r}
+set.seed(5)
 poisSplit <- countsplit(X)
 Xtrain.pois <- poisSplit[[1]]
 Xtest.pois <- poisSplit[[2]]
@@ -94,13 +114,21 @@ for (k in 1:10) {
 }
 pois.res.norm <- (pois.res - min(pois.res))/(max(pois.res)-min(pois.res))
 ggplot(data=NULL)+
-  geom_line(aes(x=1:10, y=naive.res.norm, col="Naive"))+
-  geom_line(aes(x=1:10, y=pois.res.norm, col="Poisson count splitting"))+
+  geom_pointline(aes(x=1:10, y=naive.res.norm, col="Naive"))+
+  geom_pointline(aes(x=1:10, y=pois.res.norm, col="Poisson count splitting"))+
+  theme_bw()+
+  ylab("Within-cluster SSE")+
+  xlab("Number of cluster (k)")+
+  geom_vline(aes(xintercept=3))+
+  labs(col="Method")+
+  scale_x_continuous(breaks=0:11)+
   theme_bw()
-
 ```
 
+If we knew the true value of the overdispersion parameters that generated our data, we could solve this problem by applying negative binomial count splitting with these known values. For this simulated dataset, we do know the true values, and so we can consider this option. We see that, unlike the other two options, negative binomial count splitting leads to a loss function that is actually minimized at $k=3$, which means that we correctly estimate $K^*$. 
+
 ```{r}
+set.seed(3)
 knownSplit <- countsplit(X, overdisps=true.overdisps)
 Xtrain.known <- knownSplit[[1]]
 Xtest.known <- knownSplit[[2]]
@@ -111,65 +139,79 @@ for (k in 1:10) {
 }
 known.res.norm <- (known.res - min(known.res))/(max(known.res)-min(known.res))
 ggplot(data=NULL)+
-  geom_line(aes(x=1:10, y=naive.res.norm, col="Naive"))+
-  geom_line(aes(x=1:10, y=pois.res.norm, col="Poisson count splitting"))+
-  geom_line(aes(x=1:10, y=known.res.norm, col="NB count splitting"))+
+  geom_pointline(aes(x=1:10, y=naive.res.norm, col="Naive"))+
+  geom_pointline(aes(x=1:10, y=pois.res.norm, col="Poisson count splitting"))+
+  geom_pointline(aes(x=1:10, y=known.res.norm, col="NB count splitting"))+
   geom_vline(xintercept=3)+
+  theme_bw()+
+  ylab("Within-cluster SSE")+
+  xlab("Number of cluster (k)")+
+  geom_vline(aes(xintercept=3))+
+  labs(col="Method")+
+  scale_x_continuous(breaks=0:11)+
+  theme(legend.text = element_text(size=10))+
   theme_bw()
 ```
 
+In reality, we would need to use estimated values for the overdispersion parameters. In this toy setting with only two genes, estimating the overdispersion parameters will be difficult. For large datasets, packages such as ``sctransform`` obtain reasonable estimates of overdispersion parameters by making use of the fact that most genes tend to be null (not differentially expressed across any cells) and that genes with similar average experssion levels have similar overdispersion parameters. We will explore the matter of estimated overdispersion parameters in future tutorials. 
+
+```{r}
+summary(MASS::glm.nb(X[,1]~1))$theta
+summary(MASS::glm.nb(X[,2]~1))$theta
+```
 
 # Cross validation via count splitting
 
-We can do even better by doing cross validation! 
+We can improve on the previous analysis by replacing a single train/test split with cross validation. We do this in the negative binomial setting, as this is the correct setting for this analysis. 
+
+We first create five identically distributed folds of data.
 
 ```{r}
-partition.pois <- countsplit(X, folds=5)
-partition.known <-  countsplit(X, folds=5, overdisps=true.overdisps)
+set.seed(10)
 folds <- 5
-poisRes <- matrix(NA, nrow=folds, ncol=10)
+partition.known <-  countsplit(X, folds=folds, overdisps=true.overdisps)
+```
+
+We know loop through each fold of data. For each fold, we estimate clusters on all the data that are not in that fold, and we evaluate the MSE using the held out fold.
+
+```{r}
+knownRes <- matrix(NA, nrow=folds, ncol=10)
 for (fold in 1:folds) {
-         testDat <- partition.pois[[fold]]
+        testDat <- partition.known[[fold]]
         trainDat <- X - testDat
          for (j in 1:10) {
              clusters.train <- kmeans(log(trainDat+1), centers=j, nstart=10)$cluster
-             poisRes[fold,j] <- cluster.sse(trainDat, testDat, clusters.train, 1-1/folds)
+              knownRes[fold,j] <- cluster.sse(trainDat, testDat, clusters.train, 1-1/folds)
          }
-     }
-poisMSEs <- colMeans(poisRes)
-poisMSEs.norm <- (poisMSEs-min(poisMSEs))/(max(poisMSEs)-min(poisMSEs))
-
-
-knownRes <- matrix(NA, nrow=folds, ncol=10)
-     for (fold in 1:folds) {
-       testDat <- partition.known[[fold]]
-       trainDat <- X - testDat
-       for (j in 1:10) {
-         clusters.train <- kmeans(log(trainDat+1), centers=j, nstart=10)$cluster
-         knownRes[fold,j] <- cluster.sse(trainDat, testDat, clusters.train,  1-1/folds)
-       }
-     }
-knownMSEs <- colMeans(knownRes)
-knownMSEs.norm <- (knownMSEs-min(knownMSEs))/(max(knownMSEs)-min(knownMSEs))
-
-ggplot(data=NULL)+
-  geom_line(aes(x=1:10, y=poisMSEs.norm, col="Poisson count splitting"))+
-  geom_line(aes(x=1:10, y=knownMSEs.norm, col="NB count splitting"))+
-  geom_vline(xintercept=3)+
-  theme_bw()+
-  scale_y_log10()
-
-which.min(knownMSEs.norm)
+}
 ```
 
+The total score for each attempted number of clusters ($k$) is taken to be the average MSE across the 5 folds. We once again normalize to facilitate comparison with other methods. 
+
+```{r}
+MSEs <- colMeans(knownRes)
+MSEs.norm <- (MSEs-min(MSEs))/(max(MSEs)-min(MSEs))
+ggplot(data=NULL)+
+  geom_pointline(aes(x=1:10, y=naive.res.norm, col="Naive"))+
+  geom_pointline(aes(x=1:10, y=pois.res.norm, col="Poisson count splitting"))+
+  geom_pointline(aes(x=1:10, y=known.res.norm, col="NB count splitting"))+
+  geom_pointline(aes(x=1:10, y=MSEs.norm, col="NB cross validation"))+
+  geom_vline(xintercept=3)+
+  theme_bw()+
+  ylab("Within-cluster SSE")+
+  xlab("Number of cluster (k)")+
+  geom_vline(aes(xintercept=3))+
+  labs(col="Method")+
+  scale_x_continuous(breaks=0:11)+
+  theme(legend.text = element_text(size=10))+
+  theme_bw()
+```
+
+Looking at the results, we can see that NB cross validation also leads to a loss function that is minimized at the correct number of clusters. Across many repeated trials, we expect NB cross validation to select the correct number of clusters more often than NB count splitting, as aggregating the loss function across folds helps reduce the variance of the loss function.
 
 
+# Visualizing what is going on
 
-# What if overdispersion is unknown?
-
-In this section, we generate more realistic data with more genes and more cells so that we can take advantage of the ``vst`` function from the ``sctransform`` package to estimate the gene-specific overdispersions. We show more examples of this in our Seurat, Monocle3, and Scran tutorials. 
-
-
-
+A nice thing about working with data in two dimensions is that we can visualize our data along with the true clusters. 
 
 

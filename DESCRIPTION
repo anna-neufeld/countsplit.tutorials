@@ -1,9 +1,9 @@
 Package: countsplit.tutorials
-Title: Stores the data and tutorials associated with the package `countsplit` 
+Title: Stores the data and tutorials associated with the package `countsplit`.
 Version: 2.0
 Authors@R: 
-    person("Anna", "Neufeld", , "aneufeld@uw.edu", role = c("aut", "cre"))
-Description: What the package does (one paragraph).
+    person("Anna", "Neufeld", , "aneufeld@fredhutch.org", role = c("aut", "cre"))
+Description: This package hosts the tutorial website and the accompanying data for the package ``countsplit``. Storing the data in this package allows the ``countsplit`` package to be a more reasonable size, and thus allows it to be hosted on CRAN. 
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

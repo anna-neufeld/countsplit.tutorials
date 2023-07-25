@@ -5,7 +5,7 @@ For the main package website, please visit [https://anna-neufeld.github.io/count
 
 The ``countsplit`` R package splits an integer-valued matrix into two or more folds of data that can be used for cross validation or for inference after latent variable estimation. If the entries in the original matrix follow a Poisson or a negative binomial distribution with known overdispersion parameter, then the folds of data will be independent and the inference or validation will be valid. The ability to handle negative binomial data and more than two folds of data is a new feature of the `countsplit` package; please read the new documentation carefully if you are an existing user.
 
-The motivation for this method is described in Neufeld et al., 2022 [(link to paper)](http://arxiv.org/abs/2207.00554) in the context of inference after latent variable estimation for Poisson distributed single cell RNA sequencing data. Briefly, count splitting allows users to perform differential expression analysis to see which genes vary across estimated cell types (such as those obtained via clustering) or along an estimated cellular trajectory (pseudotime). Additional motivation, along with the extension to negative binomial data, is described in Neufeld et al., 2023 [(link to paper coming soon)](...).
+The motivation for this method is described in Neufeld et al., 2022 [(link to paper)](http://arxiv.org/abs/2207.00554) in the context of inference after latent variable estimation for Poisson distributed single cell RNA sequencing data. Briefly, count splitting allows users to perform differential expression analysis to see which genes vary across estimated cell types (such as those obtained via clustering) or along an estimated cellular trajectory (pseudotime). Additional motivation, along with the extension to negative binomial data, is described in Neufeld et al., 2023 [(link to preprint)](https://arxiv.org/abs/2307.12985).
 
 The tutorials on this website currently focus on the Poisson setting and on the inference after latent variable estimation setting, but they are being updated to include more negative binomial examples and more cross validation examples. 
 
@@ -44,7 +44,7 @@ Neufeld, A.,Gao, L., Popp, J., Battle, A. & Witten, D. (2022), ‘Inference afte
 
 Neufeld, A.,Dharamshi, A., Gao, L., & Witten, D. (2023), ‘Data thinning for convolution-closed distributions’, https://arxiv.org/abs/2301.07276/ . 
 
-Neufeld, A., Popp, J., Gao, L., Battle, A. & Witten, D. (2023), ‘Negative binomial count splitting for single-cell RNA sequencing data'. 
+Neufeld, A., Popp, J., Gao, L., Battle, A. & Witten, D. (2023), ‘Negative binomial count splitting for single-cell RNA sequencing data'. https://arxiv.org/abs/2307.12985 . 
 
 
 

@@ -301,9 +301,6 @@ p1 + p2 + plot_layout(guides="collect") & theme_bw()
 Overall, we see general agreement between the parameters estimated via countsplitting and those estimated via the ideal method. The slopes tend to be the same, whereas the intercepts are shifted by `log(0.5)`, as expected based on [our preprint](https://arxiv.org/abs/2207.00554). The slopes are the quantities that we care to do inference on, as they measure differential expression across clusters. 
 
 
-#
-
-
 
 
 

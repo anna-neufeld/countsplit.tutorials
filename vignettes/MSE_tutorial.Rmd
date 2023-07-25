@@ -25,6 +25,8 @@ library(Matrix)
 library(lemon)
 ```
 
+Note that this tutorial assumes basic familiarity with the methodology described in [our paper](https://arxiv.org/abs/2307.12985). 
+
 We start by generating simple data from a negative binomial distribution. The data has three true clusters $(K^*=3)$. We generate data with only two genes ($p=2$) so that we can visualize the clusters more easily. Throughout this document, our goal is to estimate the true number of clusters $K^*$. 
 
 ```{r}

@@ -57,7 +57,7 @@ cds_train <- new_cell_data_set(
 )
 ```
 
-This pipeline assumes that the data are reasonably close to following a Poisson distribution. At the bottom of this tutorial, we consider applying negative binomial count splitting. 
+This pipeline assumes that the data are reasonably close to following a Poisson distribution. In a separate tutorial, we will consider negative binomial count splitting.
 
 
 # Preprocess the data

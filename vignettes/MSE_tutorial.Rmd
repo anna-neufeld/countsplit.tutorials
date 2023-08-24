@@ -61,14 +61,14 @@ cluster.sse <- function(trainDat, testDat, clusters.est, eps.train) {
   totSS <- 0
   for (lab in unique(clusters.est)) {
     if (sum(clusters.est==lab) > 1) {
-    clustdat.test <- testDat[clusters.est==lab,]
-    clustdat.train <- trainDat[clusters.est==lab,]
-    colmeansTrain <- apply(clustdat.train, 2, mean)
-    pred.means <- 1/eps.train*colmeansTrain
-    ss <- apply(1/(1-eps.train)*clustdat.test, 1,  function(u) sum((log(u+1)-log(pred.means+1))^2))
+      clustdat.test <- testDat[clusters.est==lab,]
+      clustdat.train <- trainDat[clusters.est==lab,]
+      colmeansTrain <- colMeans(clustdat.train)
+      pred.means <- (1-eps.train)/eps.train*colmeansTrain
+      ss <- rowSums((log1p(t(clustdat.test/(1))) - log1p(pred.means))^2)
     totSS <- totSS+sum(ss)
     }
-    }
+  }
   return(totSS)
 }
 ```
@@ -156,13 +156,16 @@ ggplot(data=NULL)+
   theme_bw()
 ```
 
-In reality, we would need to use estimated values for the overdispersion parameters. In this toy setting with only two genes, estimating the overdispersion parameters will be difficult. For large datasets, packages such as ``sctransform`` obtain reasonable estimates of overdispersion parameters by making use of the fact that most genes tend to be null (not differentially expressed across any cells) and that genes with similar average experssion levels have similar overdispersion parameters. We will explore the matter of estimated overdispersion parameters in future tutorials. 
+In reality, we would need to use estimated values for the overdispersion parameters. In this toy setting with only two genes, estimating the overdispersion parameters will be difficult. For large datasets, packages such as ``sctransform`` obtain reasonable estimates of overdispersion parameters by making use of the fact that most genes tend to be null (not differentially expressed across any cells) and that genes with similar average expression levels have similar overdispersion parameters. We will explore the matter of estimated overdispersion parameters in future tutorials. 
+
+We can briefly see that, even in this small setting, we can obtain reasonable performance from 
 
 ```{r}
 summary(MASS::glm.nb(X[,1]~1))$theta
 summary(MASS::glm.nb(X[,2]~1))$theta
 ```
 
+We can quickly verify that negatib
 # Cross validation via count splitting
 
 We can improve on the previous analysis by replacing a single train/test split with cross validation. We do this in the negative binomial setting, as this is the correct setting for this analysis. 
@@ -215,31 +218,31 @@ Looking at the results, we can see that NB cross validation also leads to a loss
 
 # Visualizing what is going on
 
-A nice thing about working with data in two dimensions is that we can visualize our data along with the estimated clusters. We can see that our true clusters are preserved in both the training set and the test set after negative binomial count splitting. Thus, we will be able to get reasonable estimates of the true clusters using the training set, and evaluate these estimates well using the test set. 
+A nice thing about working with data in two dimensions is that we can visualize our data along with either the true clusters or the estimated clusters. We start by plotting our training set and our test set, with the shape of the points representing the true cluster assignments. We can see that both the training set and the test set are grouped in space according to their true cluster values. Thus, we will be able to get reasonable estimates of the true clusters using the training set, and evaluate these estimates well using the test set. 
 
 ```{r}
-p1 <- ggplot(data=NULL, aes(x=Xtrain.known[,1]+1, y=Xtrain.known[,2]+1, col=as.factor(clusters)))+
+p1 <- ggplot(data=NULL, aes(x=Xtrain.known[,1]+1, y=Xtrain.known[,2]+1, pch=as.factor(clusters)))+
   geom_point()+
   scale_x_log10()+
   scale_y_log10()+
   theme_bw()+
-  labs(col="True Cluster")+
+  labs(shape="True Cluster")+
   xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")+
   ggtitle("Training set")
 
-p2 <- ggplot(data=NULL, aes(x=Xtest.known[,1]+1, y=Xtest.known[,2]+1, col=as.factor(clusters)))+
+p2 <- ggplot(data=NULL, aes(x=Xtest.known[,1]+1, y=Xtest.known[,2]+1, pch=as.factor(clusters)))+
   geom_point()+
   scale_x_log10()+
   scale_y_log10()+
   theme_bw()+
-  labs(col="True Cluster")+
+  labs(shape="True Cluster")+
   xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")+
   ggtitle("Test set")
 
-p1+p2
+p1+p2+plot_layout(guides="collect")
 ```
 
-We can see that, if we estimate $k=3$ clusters on the training set, the clusters look reasonable when applied to the test set. 
+We now move on to estimating clusters. Here, we see that when we estimate $k=3$ clusters on the training set, these cluster labels are still arranged according to location in space on the test set. This is becauase the $k=3$ estimated clusters are capturing true signal (differences in mean) rather than random noise. This true signal exists in both the training set and the test set.
 
 ```{r}
 estimated.clusters.3 <- kmeans(log(Xtrain.known+1), 3)$cluster
@@ -262,15 +265,15 @@ p4 <- ggplot(data=NULL, aes(x=Xtest.known[,1]+1, y=Xtest.known[,2]+1, col=as.fac
   xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")+
   ggtitle("Test set")
 
-p3+p4
+p3+p4+plot_layout(guides="collect")
 ```
 
-Suppose that we estimate $k=6$ clusters on the training set. We can see that our evaluation will be poor on the test set, because the extra clusters will be driven by random noise that will not exist in the test set. 
+Suppose that we estimate $k=6$ clusters on the training set. While the clusters are distributed according to location in space on the training set, these cluster labels are not well separated in space when applied to the test set. This is because we estimated too many clusters, and so some of the differences seen in the training set were the result of random noise rather than true signal. This will lead to poor performance metrics on the test set, which is what we want, since $k=6$ was an incorrect guess. 
 
 ```{r}
 estimated.clusters.6 <- kmeans(log(Xtrain.known+1), 6)$cluster
 
-p3 <- ggplot(data=NULL, aes(x=Xtrain.known[,1]+1, y=Xtrain.known[,2]+1, col=as.factor(estimated.clusters.6)))+
+p5 <- ggplot(data=NULL, aes(x=Xtrain.known[,1]+1, y=Xtrain.known[,2]+1, col=as.factor(estimated.clusters.6)))+
   geom_point()+
   scale_x_log10()+
   scale_y_log10()+
@@ -279,7 +282,7 @@ p3 <- ggplot(data=NULL, aes(x=Xtrain.known[,1]+1, y=Xtrain.known[,2]+1, col=as.f
   xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")+
   ggtitle("Training set")
 
-p4 <- ggplot(data=NULL, aes(x=Xtest.known[,1]+1, y=Xtest.known[,2]+1, col=as.factor(estimated.clusters.6)))+
+p6 <- ggplot(data=NULL, aes(x=Xtest.known[,1]+1, y=Xtest.known[,2]+1, col=as.factor(estimated.clusters.6)))+
   geom_point()+
   scale_x_log10()+
   scale_y_log10()+
@@ -288,9 +291,178 @@ p4 <- ggplot(data=NULL, aes(x=Xtest.known[,1]+1, y=Xtest.known[,2]+1, col=as.fac
   xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")+
   ggtitle("Test set")
 
-p3+p4
+p5+p6+plot_layout(guides="collect")
 ```
 
+# An alternate validation metric
+
+Rather than evaluate our clusters based on within-cluster mean-squared-error, we can consider evaluating our clusters based on their stability. This idea will work best when the true clusters are well-separated and not nested within each-other. 
+
+To gain intuition for this idea, consider the following example dataset. It is similar to the dataset above, but the signal strength is stronger such that the clusters are more well-separated in log-space. 
+
+```{r}
+set.seed(111)
+n=200
+p=2
+lambda <- matrix(1, nrow=n, ncol=p)
+clusters <- sample(1:3, size=n, replace=TRUE)
+lambda[clusters==2,1] <-  lambda[clusters==2,1]*exp(4)
+lambda[clusters==3,2] <-  lambda[clusters==3,2]*exp(4)
+true.overdisps <- c(20,20)
+X <- sapply(1:p, function(u) rnbinom(length(lambda[,u]), mu=lambda[,u], size= true.overdisps[u]))
+ggplot(data=NULL, aes(x=X[,1]+1, y=X[,2]+1, pch=as.factor(clusters)))+
+  geom_point()+
+  theme_bw()+
+  scale_x_log10()+
+  scale_y_log10()+
+  labs(col="True Cluster")+
+  xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")
+```
+
+Suppose that we split this data into a training set and a test set. In this section, we will do negative binomial count splitting using the true value of the overdipsersion parameter.
+
+```{r}
+set.seed(222)
+knownSplit <- countsplit(X, overdisps=true.overdisps)
+Xtrain.known <- knownSplit[[1]]
+Xtest.known <- knownSplit[[2]]
+  
+p1 <- ggplot(data=NULL, aes(x=Xtrain.known[,1]+1, y=Xtrain.known[,2]+1, pch=as.factor(clusters)))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  theme_bw()+
+  labs(shape="True Cluster")+
+  xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")+
+  ggtitle("Training set")
+
+p2 <- ggplot(data=NULL, aes(x=Xtest.known[,1]+1, y=Xtest.known[,2]+1, pch=as.factor(clusters)))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  theme_bw()+
+  labs(shape="True Cluster")+
+  xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")+
+  ggtitle("Test set")
+
+p1+p2+plot_layout(guides="collect")
+```
+
+The main idea is that, if we estimate three clusters on the training set and also estimate three clusters on the test set, the resulting clusterings should be very similar to one another because they are capturing true signal, not random noise.
+
+```{r}
+set.seed(333)
+clusters.est.train <- kmeans(log(Xtrain.known+1), centers=3)$cluster
+clusters.est.test <- kmeans(log(Xtest.known+1), centers=3)$cluster
+mclust::adjustedRandIndex(clusters.est.train,clusters.est.test)
+```
+
+On the other hand, if we estiamte either two clusters or four clusters, there will be less similarity. 
+
+```{r}
+set.seed(444)
+clusters.est.train <- kmeans(log(Xtrain.known+1), centers=2)$cluster
+clusters.est.test <- kmeans(log(Xtest.known+1), centers=2)$cluster
+mclust::adjustedRandIndex(clusters.est.train,clusters.est.test)
+
+ggplot(data=NULL, aes(x=Xtest.known[,1]+1, y=Xtest.known[,2]+1, pch=as.factor(clusters.est.train),
+                      col=as.factor(clusters.est.test)))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  theme_bw()+
+  labs(shape="True Cluster")+
+  xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")+
+  ggtitle("Test set")
+
+```
+
+```{r}
+set.seed(5)
+clusters.est.train <- kmeans(log(Xtrain.known+1), centers=5)$cluster
+clusters.est.test <- kmeans(log(Xtest.known+1), centers=5)$cluster
+mclust::adjustedRandIndex(clusters.est.train,clusters.est.test)
+
+ggplot(data=NULL, aes(x=Xtest.known[,1]+1, y=Xtest.known[,2]+1, pch=as.factor(clusters.est.train),
+                      col=as.factor(clusters.est.test)))+
+  geom_point()+
+  scale_x_log10()+
+  scale_y_log10()+
+  theme_bw()+
+  labs(shape="True Cluster")+
+  xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")+
+  ggtitle("Test set")
+
+```
+
+
+The principle is simple: if we are estimating the correct number of clusters, our clusterings should be similar whether we estimate them on the training set or the test set. 
+
+We use the same data that we generated above. 
+
+
+```{r}
+stability.res <- matrix(NA, nrow=100, ncol=9)
+
+for (t in 1:100) {
+  set.seed(t)
+  knownSplit <- countsplit(X, overdisps=true.overdisps)
+  Xtrain.known <- knownSplit[[1]]
+  Xtest.known <- knownSplit[[2]]
+  
+  for (k in 2:10) {
+    clusters.est.train <- kmeans(log(Xtrain.known+1), centers=k)$cluster
+    clusters.est.test <- kmeans(log(Xtest.known+1), centers=k)$cluster
+    stability.res[t,k-1] <- mclust::adjustedRandIndex(clusters.est.train,clusters.est.test)
+  }
+}
+ggplot(data=NULL)+
+  geom_pointline(aes(x=2:10, y=colMeans(stability.res), col="NB count splitting"))+
+  geom_vline(xintercept=3)+
+  theme_bw()+
+  ylab("Adjusted Rand Index")+
+  xlab("Number of cluster (k)")+
+  geom_vline(aes(xintercept=3))+
+  labs(col="Method")+
+  theme(legend.text = element_text(size=10))+
+  theme_bw()
+```
+
+```{r}
+n=1000
+p=1000
+lambda <- matrix(exp(rnorm(p)), nrow=n, ncol=p, byrow = TRUE)
+clusters <- sample(1:3, size=n, replace=TRUE)
+lambda[clusters==2,1:20] <-  lambda[clusters==2,1:20]*exp(2)
+lambda[clusters==3,11:20] <-  lambda[clusters==3,11:20]*exp(2)
+true.overdisps <- colMeans(lambda)
+X <- sapply(1:p, function(u) rnbinom(length(lambda[,u]), mu=lambda[,u], size= true.overdisps[u]))
+
+stability.res <- matrix(NA, nrow=100, ncol=9)
+
+for (t in 1:100) {
+  set.seed(t)
+  knownSplit <- countsplit(X, overdisps=true.overdisps)
+  Xtrain.known <- knownSplit[[1]]
+  Xtest.known <- knownSplit[[2]]
+  
+  for (k in 2:10) {
+    clusters.est.train <- kmeans(log(Xtrain.known+1), centers=k)$cluster
+    clusters.est.test <- kmeans(log(Xtest.known+1), centers=k)$cluster
+    stability.res[t,k-1] <- mclust::adjustedRandIndex(clusters.est.train,clusters.est.test)
+  }
+}
+ggplot(data=NULL)+
+  geom_pointline(aes(x=2:10, y=colMeans(stability.res), col="NB count splitting"))+
+  geom_vline(xintercept=3)+
+  theme_bw()+
+  ylab("Adjusted Rand Index")+
+  xlab("Number of cluster (k)")+
+  geom_vline(aes(xintercept=3))+
+  labs(col="Method")+
+  theme(legend.text = element_text(size=10))+
+  theme_bw()
+```
 
 
 

@@ -86,7 +86,6 @@ head(results.countsplit)
 
 We can see from the summary output that the p-values for the first 6 genes are much larger. When we make the same uniform QQ-plot as before, we see that the p-values obtained from count splitting are uniformly distributed. Since no genes are differentially expressed in our data, this means that count splitting controls the Type 1 error.
 
-
 ```{r}
 ggplot(data=NULL, aes(sample=results.countsplit[,4]))+geom_qq(distribution=stats::qunif)+geom_abline(col="red")
 ```

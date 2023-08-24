@@ -113,6 +113,7 @@ n_trials <- 100
 
 pvals_doubledip <- matrix(NA, nrow=n_trials, ncol=p)
 pvals_countsplit <-  matrix(NA, nrow= n_trials, ncol=p)
+colnames(pvals_doubledip) <- colnames(pvals_countsplit) <- paste("gene", 1:p, sep="")
 
 for (i in 1:n_trials) {
   print(i)
@@ -139,10 +140,11 @@ for (i in 1:n_trials) {
   cds <- RunPCA(cds, features=rownames(X))
   cds  <- FindNeighbors(cds , dims = 1:10)
   cds <- FindClusters(cds, resolution = 1)
-    if (length(unique(Idents(cds)))>1) {
-    pvals_doubledip[i,]  <- FindMarkers(cds, ident.1 = 1, ident.2 = 2, min.pct=0, min.cells.feature=0,
+  if (length(unique(Idents(cds)))>1) {
+    res <-  FindMarkers(cds, ident.1 = 1, ident.2 = 2, min.pct=0, min.cells.feature=0,
                               min.cells.group=0,
-                              logfc.threshold=0)$p_val
+                              logfc.threshold=0)
+    pvals_doubledip[i, rownames(res)] <- res$p_val
   }
   
   cds_train <- ScaleData(cds_train)
@@ -154,9 +156,10 @@ for (i in 1:n_trials) {
   cds_train <- NormalizeData( cds_train , assay="test")
   cds_train <- ScaleData( cds_train , assay="test")
   if (length(unique(Idents(cds_train)))>1) {
-    pvals_countsplit[i,]  <- FindMarkers(cds_train, ident.1 = 1, ident.2 = 2, min.pct=0, assay="test", min.cells.feature=0,
+    res <- FindMarkers(cds_train, ident.1 = 1, ident.2 = 2, min.pct=0, assay="test", min.cells.feature=0,
                                  min.cells.group=0,
-                                 logfc.threshold=0)$p_val
+                                 logfc.threshold=0)
+    pvals_countsplit[i,rownames(res)] <- res$p_val
   }
 }
 ```

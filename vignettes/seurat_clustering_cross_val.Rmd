@@ -1,0 +1,957 @@
+---
+title: "Tutorial: cluster validation in Seurat using count splitting" 
+output: rmarkdown::html_vignette
+bibliography: latent.bib
+vignette: >
+  %\VignetteIndexEntry{Tutorial: count splitting with seurat}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
+```
+
+*This document is a work in progress and is only meant for the development version of the `countsplit.tutorials` package.*
+
+# Goal and setup
+
+In this tutorial, we show how Poisson and negative binomial count splitting can be used to choose the resolution parameter when clustering the `pbmc` data using Seurat. This tutorial also serves as our introduction to using negative binomial count splitting on real data, where overdispersion parameters must be estimated.
+
+We start by loading the necessary packages and installing the `pbmc` data. Note that this is the dataset used in the Seurat [clustering tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html), but is also included in the `countsplit.tutorials` package for convenience.
+
+```{r}
+# Packages 
+library(Seurat)
+library(countsplit)
+library(Matrix)
+library(tidyverse)
+library(patchwork)
+library(sctransform)
+
+# Load data and replace underscores with dashes in rownames (needed for Seurat)
+data(pbmc.counts, package="countsplit.tutorials")
+rownames(pbmc.counts) <- gsub(x = rownames(pbmc.counts), pattern = "_", replacement = "-")
+```
+
+After preprocessing, the Seurat [clustering tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html) applies Louvain clustering (as implemented in `Seurat::FindClusters`) to identify cell types in the data. The Louvain clustering algorithm has a resolution parameter that determines the granularity of the clustering, with larger values leading to greater numbers of clusterings. The Seurat tutorial suggests that values between 0.4-1.2 typically return good results for single-cell datasets of around 3,000 cells (the size of the `pbmc`) dataset, but they note that this optimal value can increase for larger datasets. In the tutorial itself, they use 0.5 as the resolution parameter.
+
+In this tutprial, we use count-splitting to provide data-driven solutions for determining the best number of clusters. We consider three main metrics for cluster-evaluation:
+
+1.  Mean squared error
+2.  Stability
+3.  Modularity
+
+In practice, the choice of metric is up to the scientist. While count splitting can help guide our choice of number of clusters, domain knowledge is also important-- the chosen clusters should be biologically reasonable. 
+
+
+# Mean squared error based evaluation
+
+We will start
+
+# Count splitting
+
+For all of the metrics that we will consider, we will need to countsplit the data. Let's do this first because why not. We will consider six different splits.
+
+```{r}
+set.seed(1)
+## Countsplit function expects a cell-by-gene matrix, not a gene-by-cell matrix.
+## Let's just do this a single time here so that we don't get confused later. 
+pbmc.counts.t <- t(pbmc.counts)
+
+## Two equally sized Poisson splits 
+poissonSplit <- countsplit(pbmc.counts.t)
+
+## Two equally sized negative binomial splits 
+overdisps <- rep(Inf, nrow(pbmc.counts))
+names(overdisps) <- rownames(pbmc.counts)
+## I think there is some randomness here due to random gene sampling. Should this get changed througoug the randomness?
+## Yes. But first v
+sctransform_fit <- sctransform::vst(pbmc.counts, residual_type = "none", min_cells = 10)
+overdisps[rownames(sctransform_fit$model_pars_fit)] <- sctransform_fit$model_pars_fit[,"theta"]
+
+
+nbSplit <- countsplit(pbmc.counts.t, overdisps=overdisps)
+
+## A list of 50 random Poisson equal splits 
+nSplits <- 10
+poissonManySplits <- lapply(1:nSplits, function(u) countsplit(pbmc.counts.t))
+
+poissonManySplits9 <- lapply(1:nSplits, function(u) countsplit(pbmc.counts.t, epsilon = c(0.9,0.1)))
+
+
+nbManySplits <- lapply(1:nSplits, function(u) {
+  set.seed(u)
+  overdisps <- rep(Inf, nrow(pbmc.counts))
+  names(overdisps) <- rownames(pbmc.counts)
+  sctransform_fit <- sctransform::vst(pbmc.counts, residual_type = "none", min_cells = 10)
+  overdisps[rownames(sctransform_fit$model_pars_fit)] <- sctransform_fit$model_pars_fit[,"theta"]
+  countsplit(pbmc.counts.t, overdisps=overdisps)
+})
+
+
+## Poisson 10-fold
+poisson10fold <- countsplit(pbmc.counts.t, folds=10)
+
+## NB 10-fold 
+overdisps <- rep(Inf, nrow(pbmc.counts))
+names(overdisps) <- rownames(pbmc.counts)
+sctransform_fit <- sctransform::vst(pbmc.counts, residual_type = "none", min_cells = 10)
+overdisps[rownames(sctransform_fit$model_pars_fit)] <- sctransform_fit$model_pars_fit[,"theta"]
+nb10folds <- countsplit(pbmc.counts.t, folds=10, overdisps=overdisps)
+
+nbManySplits9 <- lapply(1:nSplits, function(u) {
+  set.seed(u)
+  overdisps <- rep(Inf, nrow(pbmc.counts))
+  names(overdisps) <- rownames(pbmc.counts)
+  sctransform_fit <- sctransform::vst(pbmc.counts, residual_type = "none", min_cells = 10)
+  overdisps[rownames(sctransform_fit$model_pars_fit)] <- sctransform_fit$model_pars_fit[,"theta"]
+  countsplit(pbmc.counts.t, overdisps=overdisps, epsilon=c(0.9,0.1))
+})
+
+```
+
+# Mean-squared error (MSE) based cluster evaluation
+
+We 
+
+This stuff will get shared across settings.
+
+```{r}
+resRange <- seq(0.2, 3, by = 0.2)
+resNames <- paste0("RNA_snn_res.", resRange)
+```
+
+### Single Poisson Split
+
+```{r}
+Xtrain <- t(poissonSplit[[1]])
+Xtest <- t(poissonSplit[[2]])
+
+pbmcTrain <- CreateSeuratObject(counts = Xtrain, min.cells = 5, min.features = 200)
+pbmcTrain[["percent.mt"]] <- PercentageFeatureSet(pbmcTrain, pattern = "^MT-")
+pbmcTrain <- subset(pbmcTrain, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+
+# same genes and cells in the train set as in the test set
+rows <- rownames(pbmcTrain)
+cols <- colnames(pbmcTrain)
+XtestSubset <- Xtest[rows,cols]
+pbmcTest <- CreateSeuratObject(counts=XtestSubset, min.cells=0, min.features=0)
+
+#run Seurat pipeline
+pbmcTrain <-
+  pbmcTrain |>
+  NormalizeData(verbose=F) |>
+  FindVariableFeatures(verbose=F) |>
+  ScaleData(verbose=F) |>
+  RunPCA(verbose=F) |>
+  FindNeighbors(dims = 1:10,verbose=F) |>
+  RunUMAP(dims = 1:10,verbose=F)
+
+dat.train <- GetAssayData(pbmcTrain, layer="data")
+
+pbmcTest <- pbmcTest[rownames(dat.train), colnames(dat.train)] |>
+  NormalizeData() |>
+  ScaleData()
+
+dat.test <- GetAssayData(pbmcTest, layer="data")
+
+# define a range of resolutions
+for (res in resRange) {
+  pbmcTrain <- FindClusters(pbmcTrain, resolution = res, verbose=FALSE)
+}
+
+# calculate within-cluster sse for each resolution
+results.poisson <- rep(NA, length(resNames))
+eps.train <- 0.5
+for (k in 1:length(resNames)) {
+  clusters.est <- pbmcTrain@meta.data[[resNames[k]]]
+  totSS <- 0
+  unique_clusters <- unique(clusters.est)
+  for (lab in unique_clusters) {
+    cluster_indices <- which(clusters.est == lab)
+    if (length(cluster_indices) > 1) {
+      clustdat.test <- dat.test[,cluster_indices]
+      clustdat.train <- dat.train[,cluster_indices]
+      rowMeansTrain <- rowMeans(clustdat.train)
+      pred.means <- rowMeansTrain/eps.train
+      ss <- sum((clustdat.test/(1-eps.train) - pred.means)^2)
+      totSS <- totSS + ss
+    }
+  }
+   results.poisson[k] <- totSS
+}
+
+results.poisson <-
+  data.frame(resolultion = resRange, sse = results.poisson) %>% 
+  mutate(sse_norm = (sse - min(sse)) / (max(sse) - min(sse)))
+
+#plot results
+pPoissonOne <- ggplot(data=results.poisson, aes(x = resolultion, y = sse_norm)) +
+  geom_point() +
+  geom_line() +
+  theme_bw() +
+  ylab("Within-cluster SSE") + ggtitle("Poisson; single fold")+
+  scale_x_continuous(name="Resolution", breaks=resRange, labels=resRange, limit=c())
+```
+
+### Many Poisson Splits
+
+```{r}
+all.results.poisson <- matrix(NA, nrow=nSplits, ncol = length(resRange))
+
+for (trial in 1:nSplits) {
+  print(trial)
+  Xtrain <- t(poissonManySplits[[trial]][[1]])
+  Xtest <- t(poissonManySplits[[trial]][[2]])
+
+  pbmcTrain <- CreateSeuratObject(counts = Xtrain, min.cells = 5, min.features = 200)
+  pbmcTrain[["percent.mt"]] <- PercentageFeatureSet(pbmcTrain, pattern = "^MT-")
+  pbmcTrain <- subset(pbmcTrain, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+
+  # same genes and cells in the train set as in the test set
+  rows <- rownames(pbmcTrain)
+  cols <- colnames(pbmcTrain)
+  XtestSubset <- Xtest[rows,cols]
+  pbmcTest <- CreateSeuratObject(counts=XtestSubset, min.cells=0, min.features=0)
+
+
+  #run Seurat pipeline
+  pbmcTrain <-
+    pbmcTrain |>
+    NormalizeData(verbose=F) |>
+    FindVariableFeatures(verbose=F) |>
+    ScaleData(verbose=F) |>
+    RunPCA(verbose=F) |>
+    FindNeighbors(dims = 1:10, verbose=F) |>
+    RunUMAP(dims = 1:10, verbose=F)
+
+  dat.train <- GetAssayData(pbmcTrain, layer="data")
+
+  pbmcTest <- pbmcTest[rownames(dat.train), colnames(dat.train)] |>
+    NormalizeData(verbose=F) |>
+    ScaleData(verbose=F)
+
+  dat.test <- GetAssayData(pbmcTest, layer="data")
+  
+  for (res in resRange) {
+    pbmcTrain <- FindClusters(pbmcTrain, resolution = res, verbose=FALSE)
+  }
+
+  # calculcate within-cluster sse for each resolution
+  eps.train <- 0.5
+  for (k in 1:length(resNames)) {
+    clusters.est <- pbmcTrain@meta.data[[resNames[k]]]
+    totSS <- 0
+    unique_clusters <- unique(clusters.est)
+    for (lab in unique_clusters) {
+      cluster_indices <- which(clusters.est == lab)
+      if (length(cluster_indices) > 1) {
+        clustdat.test <- dat.test[,cluster_indices]
+        clustdat.train <- dat.train[,cluster_indices]
+        rowMeansTrain <- rowMeans(clustdat.train)
+        pred.means <- rowMeansTrain/eps.train
+        ss <- sum((clustdat.test/(1-eps.train) - pred.means)^2)
+        totSS <- totSS + ss
+      }
+    }
+    all.results.poisson[trial, k] <- totSS
+  }
+}
+```
+
+```{r}
+all.results.poisson <- data.frame(all.results.poisson)
+resNames2 <- paste0("RNA_snn_res-", resRange)
+names(all.results.poisson) <- resNames2
+all.results.poisson$trial <- 1:nSplits
+all.results.poisson2 <- pivot_longer(all.results.poisson, 
+                                cols = all_of(resNames2)) %>%
+  mutate(res = unlist(str_split(name, "-"))[seq(2, (nSplits*length(resRange)*2), by=2)]) 
+
+all.results.poisson.group <- all.results.poisson2 %>% group_by(trial) %>%
+  mutate(normVal = (value-min(value))/(max(value)-min(value)))
+
+meanRes <- colMeans(all.results.poisson)[1:15]
+normMeanRes <- (meanRes-min(meanRes))/(max(meanRes)-min(meanRes))
+
+all.results.poisson.group  <- all.results.poisson.group %>% mutate(normMeanRes = normMeanRes)
+
+pPoissonRepeated <- ggplot(data=all.results.poisson.group, aes(x=res, y=normVal, group=trial, col="Individual Split"))+geom_point()+
+  geom_line()+theme_bw()+
+  geom_line(aes(x=res, y=normMeanRes, col="Averaged"), size=2)+
+  ylab("Within-cluster SSE") + ggtitle("Poisson; many repeated splits")
+```
+
+### Poisson multifold
+
+```{r}
+folds=10
+multifold.results.poisson <- matrix(NA, nrow=folds, ncol = length(resRange))
+
+for (fold in 1:folds) {
+  print(fold)
+  Xtest<- t(poisson10fold[[fold]])
+  Xtrain <- pbmc.counts - Xtest
+
+  pbmcTrain <- CreateSeuratObject(counts = Xtrain, min.cells = 5, min.features = 200)
+  pbmcTrain[["percent.mt"]] <- PercentageFeatureSet(pbmcTrain, pattern = "^MT-")
+  pbmcTrain <- subset(pbmcTrain, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+
+  # same genes and cells in the train set as in the test set
+  rows <- rownames(pbmcTrain)
+  cols <- colnames(pbmcTrain)
+  XtestSubset <- Xtest[rows,cols]
+  pbmcTest <- CreateSeuratObject(counts=XtestSubset, min.cells=0, min.features=0)
+
+
+  #run Seurat pipeline
+  pbmcTrain <-
+    pbmcTrain |>
+    NormalizeData(verbose=F) |>
+    FindVariableFeatures(verbose=F) |>
+    ScaleData(verbose=F) |>
+    RunPCA(verbose=F) |>
+    FindNeighbors(dims = 1:10, verbose=F) |>
+    RunUMAP(dims = 1:10, verbose=F)
+
+raw.counts.train <- GetAssayData(pbmcTrain, layer="counts")
+sizeFacs.train <- pbmcTrain$nCount_RNA
+default.dat.train <- GetAssayData(pbmcTrain, layer="data")
+my.dat.train <- sapply(1:NCOL(raw.counts.train), 
+                             function(u) log1p(raw.counts.train[,u]/sizeFacs.train[u]*10000))
+all.equal(as.numeric(default.dat.train), as.numeric(my.dat.train))
+dat.train <- sapply(1:NCOL(raw.counts.train), 
+                             function(u) log1p((raw.counts.train[,u]/eps.train)/sizeFacs[u]*10000))
+
+pbmcTest <- pbmcTest[rownames(dat.train), colnames(dat.train)] |>
+    NormalizeData(verbose=F) |>
+    ScaleData(verbose=F)
+raw.counts.test <- GetAssayData(pbmcTest, layer="counts")
+sizeFacs.test <- pbmcTest$nCount_RNA
+dat.test <- sapply(1:NCOL(raw.counts.test), 
+                             function(u) log1p((raw.counts.test[,u]/(1-eps.train))/sizeFacs[u]*10000))
+  
+for (res in resRange) {
+  pbmcTrain <- FindClusters(pbmcTrain, resolution = res, verbose=FALSE)
+}
+
+  # calculcate within-cluster sse for each resolution
+  eps.train <- (folds-1)/(folds)
+  for (k in 1:length(resNames)) {
+    clusters.est <- pbmcTrain@meta.data[[resNames[k]]]
+    totSS <- 0
+    unique_clusters <- unique(clusters.est)
+    for (lab in unique_clusters) {
+      cluster_indices <- which(clusters.est == lab)
+      if (length(cluster_indices) > 1) {
+        clustdat.test <- dat.test[,cluster_indices]
+        clustdat.train <- dat.train[,cluster_indices]
+        rowMeansTrain <- rowMeans(clustdat.train)
+        pred.means <- rowMeansTrain
+        ss <- sum((clustdat.test - pred.means)^2)
+        totSS <- totSS + ss
+      }
+    }
+    multifold.results.poisson[fold, k] <- totSS
+  }
+}
+```
+
+```{r}
+multifold.results.poisson <- data.frame(multifold.results.poisson)
+resNames2 <- paste0("RNA_snn_res-", resRange)
+names(multifold.results.poisson) <- resNames2
+multifold.results.poisson$trial <- 1:folds
+multifold.results.poisson2 <- pivot_longer( multifold.results.poisson, 
+                                cols = all_of(resNames2)) %>%
+  mutate(res = unlist(str_split(name, "-"))[seq(2, (nSplits*length(resRange)*2), by=2)]) 
+
+multifold.results.poisson.group <- multifold.results.poisson2 %>% group_by(trial) %>%
+  mutate(normVal = (value-min(value))/(max(value)-min(value)))
+
+meanRes <- colMeans(multifold.results.poisson)[1:15]
+normMeanRes <- (meanRes-min(meanRes))/(max(meanRes)-min(meanRes))
+
+multifold.results.poisson.group  <- multifold.results.poisson.group %>% mutate(normMeanRes = normMeanRes)
+
+pPoissonMulti <- ggplot(data=multifold.results.poisson.group, aes(x=res, y=normVal, group=trial, col="Individual Split"))+geom_point()+
+  geom_line()+theme_bw()+
+  geom_line(aes(x=res, y=normMeanRes, col="Averaged"), linewidth=2)+
+  ylab("Within-cluster SSE") + ggtitle("Poisson; many repeated splits")
+```
+
+### Poisson Many folds 9
+
+```{r}
+all.results.poisson9 <- matrix(NA, nrow=nSplits, ncol = length(resRange))
+folds=10
+eps.train <- 1-1/folds
+eps.test <- 1/folds
+
+for (trial in 1:nSplits) {
+  print(trial)
+  Xtrain <- t(poissonManySplits9[[trial]][[1]])
+  Xtest <- t(poissonManySplits9[[trial]][[2]])
+
+  pbmcTrain <- CreateSeuratObject(counts = Xtrain, min.cells = 5, min.features = 200)
+  pbmcTrain[["percent.mt"]] <- PercentageFeatureSet(pbmcTrain, pattern = "^MT-")
+  pbmcTrain <- subset(pbmcTrain, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+
+  # same genes and cells in the train set as in the test set
+  rows <- rownames(pbmcTrain)
+  cols <- colnames(pbmcTrain)
+  XtestSubset <- Xtest[rows,cols]
+  pbmcTest <- CreateSeuratObject(counts=XtestSubset, min.cells=0, min.features=0)
+
+
+  #run Seurat pipeline
+  pbmcTrain <-
+    pbmcTrain |>
+    NormalizeData(verbose=F) |>
+    FindVariableFeatures(verbose=F) |>
+    ScaleData(verbose=F) |>
+    RunPCA(verbose=F) |>
+    FindNeighbors(dims = 1:10, verbose=F) |>
+    RunUMAP(dims = 1:10, verbose=F)
+
+raw.counts.train <- GetAssayData(pbmcTrain, layer="counts")
+sizeFacs.train <- pbmcTrain$nCount_RNA
+dat.train <- sapply(1:NCOL(raw.counts.train), 
+                             function(u) log1p((raw.counts.train[,u]/eps.train)/sizeFacs.train[u]*10000))
+
+pbmcTest <- pbmcTest[rownames(dat.train), colnames(dat.train)] |>
+    NormalizeData(verbose=F) |>
+    ScaleData(verbose=F)
+raw.counts.test <- GetAssayData(pbmcTest, layer="counts")
+sizeFacs.test <- pbmcTest$nCount_RNA
+dat.test <- sapply(1:NCOL(raw.counts.test), 
+                             function(u) log1p((raw.counts.test[,u]/(eps.test))/sizeFacs.test[u]*10000))
+  
+  for (res in resRange) {
+    pbmcTrain <- FindClusters(pbmcTrain, resolution = res, verbose=FALSE)
+  }
+
+  # calculcate within-cluster sse for each resolution
+  for (k in 1:length(resNames)) {
+    clusters.est <- pbmcTrain@meta.data[[resNames[k]]]
+    totSS <- 0
+    unique_clusters <- unique(clusters.est)
+    for (lab in unique_clusters) {
+      cluster_indices <- which(clusters.est == lab)
+      if (length(cluster_indices) > 1) {
+        clustdat.test <- dat.test[,cluster_indices]
+        clustdat.train <- dat.train[,cluster_indices]
+        rowMeansTrain <- rowMeans(clustdat.train)
+        pred.means <- rowMeansTrain
+        ss <- sum((clustdat.test - pred.means)^2)
+        print(lab)
+        print(ss)
+        totSS <- totSS + ss
+      }
+    }
+    all.results.poisson9[trial, k] <- totSS
+  }
+}
+```
+
+```{r}
+all.results.poisson9 <- data.frame(all.results.poisson9)
+resNames2 <- paste0("RNA_snn_res-", resRange)
+names(all.results.poisson9) <- resNames2
+all.results.poisson9$trial <- 1:nSplits
+all.results.poisson92 <- pivot_longer(all.results.poisson9, 
+                                cols = all_of(resNames2)) %>%
+  mutate(res = unlist(str_split(name, "-"))[seq(2, (nSplits*length(resRange)*2), by=2)]) 
+
+all.results.poisson9.group <- all.results.poisson92 %>% group_by(trial) %>%
+  mutate(normVal = (value-min(value))/(max(value)-min(value)))
+
+meanRes <- colMeans(all.results.poisson9)[1:15]
+normMeanRes <- (meanRes-min(meanRes))/(max(meanRes)-min(meanRes))
+
+all.results.poisson9.group  <- all.results.poisson9.group %>% mutate(normMeanRes = normMeanRes)
+
+pPoissonRepeated9 <- ggplot(data=all.results.poisson9.group, aes(x=res, y=normVal, group=trial, col="Individual Split"))+geom_point()+
+  geom_line()+theme_bw()+
+  geom_line(aes(x=res, y=normMeanRes, col="Averaged"), size=2)+
+  ylab("Within-cluster SSE") + ggtitle("Poisson; many repeated splits, eps.train=0.9")
+```
+
+### Single NB Split
+
+```{r}
+Xtrain <- t(nbSplit[[1]])
+Xtest <- t(nbSplit[[2]])
+
+pbmcTrain <- CreateSeuratObject(counts = Xtrain, min.cells = 5, min.features = 200)
+pbmcTrain[["percent.mt"]] <- PercentageFeatureSet(pbmcTrain, pattern = "^MT-")
+pbmcTrain <- subset(pbmcTrain, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+
+# same genes and cells in the train set as in the test set
+rows <- rownames(pbmcTrain)
+cols <- colnames(pbmcTrain)
+XtestSubset <- Xtest[rows,cols]
+pbmcTest <- CreateSeuratObject(counts=XtestSubset, min.cells=0, min.features=0)
+
+#run Seurat pipeline
+pbmcTrain <-
+  pbmcTrain |>
+  NormalizeData(verbose=F) |>
+  FindVariableFeatures(verbose=F) |>
+  ScaleData(verbose=F) |>
+  RunPCA(verbose=F) |>
+  FindNeighbors(dims = 1:10,verbose=F) |>
+  RunUMAP(dims = 1:10,verbose=F)
+
+dat.train <- GetAssayData(pbmcTrain, layer="data")
+
+pbmcTest <- pbmcTest[rownames(dat.train), colnames(dat.train)] |>
+  NormalizeData() |>
+  ScaleData()
+
+dat.test <- GetAssayData(pbmcTest, layer="data")
+
+# define a range of resolutions
+for (res in resRange) {
+  pbmcTrain <- FindClusters(pbmcTrain, resolution = res, verbose=FALSE)
+}
+
+# calculate within-cluster sse for each resolution
+results.nb <- rep(NA, length(resNames))
+eps.train <- 0.5
+for (k in 1:length(resNames)) {
+  clusters.est <- pbmcTrain@meta.data[[resNames[k]]]
+  totSS <- 0
+  unique_clusters <- unique(clusters.est)
+  for (lab in unique_clusters) {
+    cluster_indices <- which(clusters.est == lab)
+    if (length(cluster_indices) > 1) {
+      clustdat.test <- dat.test[,cluster_indices]
+      clustdat.train <- dat.train[,cluster_indices]
+      rowMeansTrain <- rowMeans(clustdat.train)
+      pred.means <- rowMeansTrain
+      ss <- sum((clustdat.test - pred.means)^2)
+      totSS <- totSS + ss
+    }
+  }
+   results.nb[k] <- totSS
+}
+
+results.nb <-
+  data.frame(resolultion = resRange, sse = results.nb) %>% 
+  mutate(sse_norm = (sse - min(sse)) / (max(sse) - min(sse)))
+
+#plot results
+pnbOne <- ggplot(data=results.nb, aes(x = resolultion, y = sse_norm)) +
+  geom_point() +
+  geom_line() +
+  theme_bw() +
+  ylab("Within-cluster SSE") + ggtitle("nb; single fold")+
+  scale_x_continuous(name="Resolution", breaks=resRange, labels=resRange, limit=c())
+```
+
+### Many nb Splits
+
+```{r}
+all.results.nb <- matrix(NA, nrow=nSplits, ncol = length(resRange))
+
+for (trial in 1:nSplits) {
+  print(trial)
+  Xtrain <- t(nbManySplits[[trial]][[1]])
+  Xtest <- t(nbManySplits[[trial]][[2]])
+
+  pbmcTrain <- CreateSeuratObject(counts = Xtrain, min.cells = 5, min.features = 200)
+  pbmcTrain[["percent.mt"]] <- PercentageFeatureSet(pbmcTrain, pattern = "^MT-")
+  pbmcTrain <- subset(pbmcTrain, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+
+  # same genes and cells in the train set as in the test set
+  rows <- rownames(pbmcTrain)
+  cols <- colnames(pbmcTrain)
+  XtestSubset <- Xtest[rows,cols]
+  pbmcTest <- CreateSeuratObject(counts=XtestSubset, min.cells=0, min.features=0)
+
+
+  #run Seurat pipeline
+  pbmcTrain <-
+    pbmcTrain |>
+    NormalizeData(verbose=F) |>
+    FindVariableFeatures(verbose=F) |>
+    ScaleData(verbose=F) |>
+    RunPCA(verbose=F) |>
+    FindNeighbors(dims = 1:10, verbose=F) |>
+    RunUMAP(dims = 1:10, verbose=F)
+
+  dat.train <- GetAssayData(pbmcTrain, layer="data")
+
+  pbmcTest <- pbmcTest[rownames(dat.train), colnames(dat.train)] |>
+    NormalizeData(verbose=F) |>
+    ScaleData(verbose=F)
+
+  dat.test <- GetAssayData(pbmcTest, layer="data")
+  
+  for (res in resRange) {
+    pbmcTrain <- FindClusters(pbmcTrain, resolution = res, verbose=FALSE)
+  }
+
+  # calculcate within-cluster sse for each resolution
+  for (k in 1:length(resNames)) {
+    clusters.est <- pbmcTrain@meta.data[[resNames[k]]]
+    totSS <- 0
+    unique_clusters <- unique(clusters.est)
+    for (lab in unique_clusters) {
+      cluster_indices <- which(clusters.est == lab)
+      if (length(cluster_indices) > 1) {
+        clustdat.test <- dat.test[,cluster_indices]
+        clustdat.train <- dat.train[,cluster_indices]
+        rowMeansTrain <- rowMeans(clustdat.train)
+        pred.means <- rowMeansTrain
+        ss <- sum((clustdat.test - pred.means)^2)
+        totSS <- totSS + ss
+      }
+    }
+    all.results.nb[trial, k] <- totSS
+  }
+}
+```
+
+```{r}
+all.results.nb <- data.frame(all.results.nb)
+resNames2 <- paste0("RNA_snn_res-", resRange)
+names(all.results.nb) <- resNames2
+all.results.nb$trial <- 1:nSplits
+all.results.nb2 <- pivot_longer(all.results.nb, 
+                                cols = all_of(resNames2)) %>%
+  mutate(res = unlist(str_split(name, "-"))[seq(2, (nSplits*length(resRange)*2), by=2)]) 
+
+all.results.nb.group <- all.results.nb2 %>% group_by(trial) %>%
+  mutate(normVal = (value-min(value))/(max(value)-min(value)))
+
+meanRes <- colMeans(all.results.nb)[1:15]
+normMeanRes <- (meanRes-min(meanRes))/(max(meanRes)-min(meanRes))
+
+all.results.nb.group  <- all.results.nb.group %>% mutate(normMeanRes = normMeanRes)
+
+pnbRepeated <- ggplot(data=all.results.nb.group, aes(x=res, y=normVal, group=trial, col="Individual Split"))+geom_point()+
+  geom_line()+theme_bw()+
+  geom_line(aes(x=res, y=normMeanRes, col="Averaged"), size=2)+
+  ylab("Within-cluster SSE") + ggtitle("nb; many repeated splits")
+pnbRepeated
+```
+
+### nb multifold
+
+```{r}
+folds=10
+multifold.results.nb <- matrix(NA, nrow=folds, ncol = length(resRange))
+
+for (fold in 1:folds) {
+  print(fold)
+  Xtest<- t(nb10fold[[fold]])
+  Xtrain <- pbmc.counts - Xtest
+
+  pbmcTrain <- CreateSeuratObject(counts = Xtrain, min.cells = 5, min.features = 200)
+  pbmcTrain[["percent.mt"]] <- PercentageFeatureSet(pbmcTrain, pattern = "^MT-")
+  pbmcTrain <- subset(pbmcTrain, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+
+  # same genes and cells in the train set as in the test set
+  rows <- rownames(pbmcTrain)
+  cols <- colnames(pbmcTrain)
+  XtestSubset <- Xtest[rows,cols]
+  pbmcTest <- CreateSeuratObject(counts=XtestSubset, min.cells=0, min.features=0)
+
+
+  #run Seurat pipeline
+  pbmcTrain <-
+    pbmcTrain |>
+    NormalizeData(verbose=F) |>
+    FindVariableFeatures(verbose=F) |>
+    ScaleData(verbose=F) |>
+    RunPCA(verbose=F) |>
+    FindNeighbors(dims = 1:10, verbose=F) |>
+    RunUMAP(dims = 1:10, verbose=F)
+
+raw.counts.train <- GetAssayData(pbmcTrain, layer="counts")
+sizeFacs.train <- pbmcTrain$nCount_RNA
+default.dat.train <- GetAssayData(pbmcTrain, layer="data")
+my.dat.train <- sapply(1:NCOL(raw.counts.train), 
+                             function(u) log1p(raw.counts.train[,u]/sizeFacs.train[u]*10000))
+all.equal(as.numeric(default.dat.train), as.numeric(my.dat.train))
+dat.train <- sapply(1:NCOL(raw.counts.train), 
+                             function(u) log1p((raw.counts.train[,u]/eps.train)/sizeFacs[u]*10000))
+
+pbmcTest <- pbmcTest[rownames(dat.train), colnames(dat.train)] |>
+    NormalizeData(verbose=F) |>
+    ScaleData(verbose=F)
+raw.counts.test <- GetAssayData(pbmcTest, layer="counts")
+sizeFacs.test <- pbmcTest$nCount_RNA
+dat.test <- sapply(1:NCOL(raw.counts.test), 
+                             function(u) log1p((raw.counts.test[,u]/(1-eps.train))/sizeFacs[u]*10000))
+  
+for (res in resRange) {
+  pbmcTrain <- FindClusters(pbmcTrain, resolution = res, verbose=FALSE)
+}
+
+  # calculcate within-cluster sse for each resolution
+  eps.train <- (folds-1)/(folds)
+  for (k in 1:length(resNames)) {
+    clusters.est <- pbmcTrain@meta.data[[resNames[k]]]
+    totSS <- 0
+    unique_clusters <- unique(clusters.est)
+    for (lab in unique_clusters) {
+      cluster_indices <- which(clusters.est == lab)
+      if (length(cluster_indices) > 1) {
+        clustdat.test <- dat.test[,cluster_indices]
+        clustdat.train <- dat.train[,cluster_indices]
+        rowMeansTrain <- rowMeans(clustdat.train)
+        pred.means <- rowMeansTrain
+        ss <- sum((clustdat.test - pred.means)^2)
+        totSS <- totSS + ss
+      }
+    }
+    multifold.results.nb[fold, k] <- totSS
+  }
+}
+```
+
+```{r}
+multifold.results.nb <- data.frame(multifold.results.nb)
+resNames2 <- paste0("RNA_snn_res-", resRange)
+names(multifold.results.nb) <- resNames2
+multifold.results.nb$trial <- 1:folds
+multifold.results.nb2 <- pivot_longer( multifold.results.nb, 
+                                cols = all_of(resNames2)) %>%
+  mutate(res = unlist(str_split(name, "-"))[seq(2, (nSplits*length(resRange)*2), by=2)]) 
+
+multifold.results.nb.group <- multifold.results.nb2 %>% group_by(trial) %>%
+  mutate(normVal = (value-min(value))/(max(value)-min(value)))
+
+meanRes <- colMeans(multifold.results.nb)[1:15]
+normMeanRes <- (meanRes-min(meanRes))/(max(meanRes)-min(meanRes))
+
+multifold.results.nb.group  <- multifold.results.nb.group %>% mutate(normMeanRes = normMeanRes)
+
+pnbMulti <- ggplot(data=multifold.results.nb.group, aes(x=res, y=normVal, group=trial, col="Individual Split"))+geom_point()+
+  geom_line()+theme_bw()+
+  geom_line(aes(x=res, y=normMeanRes, col="Averaged"), linewidth=2)+
+  ylab("Within-cluster SSE") + ggtitle("nb; many repeated splits")
+```
+
+### nb Many folds 9
+
+```{r}
+all.results.nb9 <- matrix(NA, nrow=nSplits, ncol = length(resRange))
+folds=10
+eps.train <- 1-1/folds
+eps.test <- 1/folds
+
+for (trial in 1:nSplits) {
+  print(trial)
+  Xtrain <- t(nbManySplits9[[trial]][[1]])
+  Xtest <- t(nbManySplits9[[trial]][[2]])
+
+  pbmcTrain <- CreateSeuratObject(counts = Xtrain, min.cells = 5, min.features = 200)
+  pbmcTrain[["percent.mt"]] <- PercentageFeatureSet(pbmcTrain, pattern = "^MT-")
+  pbmcTrain <- subset(pbmcTrain, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+
+  # same genes and cells in the train set as in the test set
+  rows <- rownames(pbmcTrain)
+  cols <- colnames(pbmcTrain)
+  XtestSubset <- Xtest[rows,cols]
+  pbmcTest <- CreateSeuratObject(counts=XtestSubset, min.cells=0, min.features=0)
+
+
+  #run Seurat pipeline
+  pbmcTrain <-
+    pbmcTrain |>
+    NormalizeData(verbose=F) |>
+    FindVariableFeatures(verbose=F) |>
+    ScaleData(verbose=F) |>
+    RunPCA(verbose=F) |>
+    FindNeighbors(dims = 1:10, verbose=F) |>
+    RunUMAP(dims = 1:10, verbose=F)
+
+raw.counts.train <- GetAssayData(pbmcTrain, layer="counts")
+sizeFacs.train <- pbmcTrain$nCount_RNA
+dat.train <- sapply(1:NCOL(raw.counts.train), 
+                             function(u) log1p((raw.counts.train[,u]/eps.train)/sizeFacs.train[u]*10000))
+
+pbmcTest <- pbmcTest[rownames(dat.train), colnames(dat.train)] |>
+    NormalizeData(verbose=F) |>
+    ScaleData(verbose=F)
+raw.counts.test <- GetAssayData(pbmcTest, layer="counts")
+sizeFacs.test <- pbmcTest$nCount_RNA
+dat.test <- sapply(1:NCOL(raw.counts.test), 
+                             function(u) log1p((raw.counts.test[,u]/(eps.test))/sizeFacs.test[u]*10000))
+  
+  for (res in resRange) {
+    pbmcTrain <- FindClusters(pbmcTrain, resolution = res, verbose=FALSE)
+  }
+
+  # calculcate within-cluster sse for each resolution
+  for (k in 1:length(resNames)) {
+    clusters.est <- pbmcTrain@meta.data[[resNames[k]]]
+    totSS <- 0
+    unique_clusters <- unique(clusters.est)
+    for (lab in unique_clusters) {
+      cluster_indices <- which(clusters.est == lab)
+      if (length(cluster_indices) > 1) {
+        clustdat.test <- dat.test[,cluster_indices]
+        clustdat.train <- dat.train[,cluster_indices]
+        rowMeansTrain <- rowMeans(clustdat.train)
+        pred.means <- rowMeansTrain
+        ss <- sum((clustdat.test - pred.means)^2)
+        print(lab)
+        print(ss)
+        totSS <- totSS + ss
+      }
+    }
+    all.results.nb9[trial, k] <- totSS
+  }
+}
+```
+
+```{r}
+all.results.nb9 <- data.frame(all.results.nb9)
+resNames2 <- paste0("RNA_snn_res-", resRange)
+names(all.results.nb9) <- resNames2
+all.results.nb9$trial <- 1:nSplits
+all.results.nb92 <- pivot_longer(all.results.nb9, 
+                                cols = all_of(resNames2)) %>%
+  mutate(res = unlist(str_split(name, "-"))[seq(2, (nSplits*length(resRange)*2), by=2)]) 
+
+all.results.nb9.group <- all.results.nb92 %>% group_by(trial) %>%
+  mutate(normVal = (value-min(value))/(max(value)-min(value)))
+
+meanRes <- colMeans(all.results.nb9)[1:15]
+normMeanRes <- (meanRes-min(meanRes))/(max(meanRes)-min(meanRes))
+
+all.results.nb9.group  <- all.results.nb9.group %>% mutate(normMeanRes = normMeanRes)
+
+pnbRepeated9 <- ggplot(data=all.results.nb9.group, aes(x=res, y=normVal, group=trial, col="Individual Split"))+geom_point()+
+  geom_line()+theme_bw()+
+  geom_line(aes(x=res, y=normMeanRes, col="Averaged"), size=2)+
+  ylab("Within-cluster SSE") + ggtitle("nb; many repeated splits, eps.train=0.9")
+```
+
+## Looking at the overall results
+
+```{r}
+library(patchwork)
+pPoissonOne +
+pPoissonRepeated+ 
+pPoissonMulti+ 
+pPoissonRepeated9+
+pnbOne + 
+pnbRepeated+ 
+pnbMulti+
+pnbRepeated9+ 
+  plot_layout(nrow=2, byrow=T, guides="collect")
+```
+
+
+# Stability-based analysis
+
+I am excited about these. I hope we can go quick.
+
+### One split Poisson
+
+```{r}
+rands.poisson <- rep(NA, length(resRange))
+
+Xtrain <- t(poissonSplit[[1]])
+Xtest <- t(poissonSplit[[2]])
+
+pbmcTrain <- CreateSeuratObject(counts = Xtrain, min.cells = 5, min.features = 200)
+pbmcTrain[["percent.mt"]] <- PercentageFeatureSet(pbmcTrain, pattern = "^MT-")
+pbmcTrain <- subset(pbmcTrain, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+
+# same genes and cells in the train set as in the test set
+rows <- rownames(pbmcTrain)
+cols <- colnames(pbmcTrain)
+XtestSubset <- Xtest[rows,cols]
+pbmcTest <- CreateSeuratObject(counts=XtestSubset, min.cells=0, min.features = 0)
+
+#run Seurat pipeline
+pbmcTrain <-
+  pbmcTrain |>
+  NormalizeData(verbose=F) |>
+  FindVariableFeatures(verbose=F) |>
+  ScaleData(verbose=F) |>
+  RunPCA(verbose=F) |>
+  FindNeighbors(dims = 1:10,verbose=F) |>
+  RunUMAP(dims = 1:10,verbose=F)
+
+pbmcTest <- pbmcTest |>
+  NormalizeData(verbose=F) |>
+  FindVariableFeatures(verbose=F) |>
+  ScaleData(verbose=F) |>
+  RunPCA(verbose=F) |>
+  FindNeighbors(dims = 1:10,verbose=F) |>
+  RunUMAP(dims = 1:10,verbose=F)
+
+for (k in 1:length(resNames)) {
+  pbmcTrain <- FindClusters(pbmcTrain, resolution = res, verbose=FALSE)
+  pbmcTest <- FindClusters(pbmcTrain, resolution = res, verbose=FALSE)
+
+  clusters.est.train <- pbmcTrain@meta.data[[resNames[k]]]
+  clusters.est.test  <- pbmcTest@meta.data[[resNames[k]]]
+  
+  rands.poisson[k] <- mclust::adjustedRandIndex(clusters.est.train, clusters.est.test)
+}
+
+plot(rands.poisson)
+
+```
+
+
+### Many splits Poisson
+
+```{r}
+rands.poisson.many <- rep(NA, length(resRange))
+
+Xtrain <- t(poissonSplit[[1]])
+Xtest <- t(poissonSplit[[2]])
+
+pbmcTrain <- CreateSeuratObject(counts = Xtrain, min.cells = 5, min.features = 200)
+pbmcTrain[["percent.mt"]] <- PercentageFeatureSet(pbmcTrain, pattern = "^MT-")
+pbmcTrain <- subset(pbmcTrain, subset = nFeature_RNA > 200 & nFeature_RNA < 2500 & percent.mt < 5)
+
+# same genes and cells in the train set as in the test set
+rows <- rownames(pbmcTrain)
+cols <- colnames(pbmcTrain)
+XtestSubset <- Xtest[rows,cols]
+pbmcTest <- CreateSeuratObject(counts=XtestSubset, min.cells=0, min.features = 0)
+
+#run Seurat pipeline
+pbmcTrain <-
+  pbmcTrain |>
+  NormalizeData(verbose=F) |>
+  FindVariableFeatures(verbose=F) |>
+  ScaleData(verbose=F) |>
+  RunPCA(verbose=F) |>
+  FindNeighbors(dims = 1:10,verbose=F) |>
+  RunUMAP(dims = 1:10,verbose=F)
+
+pbmcTest <- pbmcTest |>
+  NormalizeData(verbose=F) |>
+  FindVariableFeatures(verbose=F) |>
+  ScaleData(verbose=F) |>
+  RunPCA(verbose=F) |>
+  FindNeighbors(dims = 1:10,verbose=F) |>
+  RunUMAP(dims = 1:10,verbose=F)
+
+for (k in 1:length(resNames)) {
+  pbmcTrain <- FindClusters(pbmcTrain, resolution = res, verbose=FALSE)
+  pbmcTest <- FindClusters(pbmcTrain, resolution = res, verbose=FALSE)
+
+  clusters.est.train <- pbmcTrain@meta.data[[resNames[k]]]
+  clusters.est.test  <- pbmcTest@meta.data[[resNames[k]]]
+  
+  rands.poisson[k] <- mclust::adjustedRandIndex(clusters.est.train, clusters.est.test)
+}
+
+plot(rands.poisson)
+
+```
+

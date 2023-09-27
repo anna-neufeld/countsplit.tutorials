@@ -54,7 +54,7 @@ ggplot(data=NULL, aes(x=X[,1]+1, y=X[,2]+1, col=as.factor(clusters)))+
 
 In order to estimate $K^*$, we try out models with different numbers of clusters $k$ ranging from $1$ to $10$, so as to see which model best fits the observed data. Unfortunately, if we estimate the clusters and evaluate the clusters on the same data, models with more clusters (i.e. more complexity) will always appear better. Thus, our loss function curve decreases monotonically with the number of clusters, and we cannot simply pick the value of $k$ that minimizes the loss function. We demonstrate this issue below. 
 
-We will use within-cluster sum of squared errors (SSE) as our loss function. We implement this loss function here. Note that the within-cluster SSE is computed on a log scale. 
+We will use within-cluster sum of squared errors (SSE) as our loss function. We implement this loss function here. Note that the within-cluster SSE is computed on a log scale. Please note that, when you are evaluating real scRNA-seq data, you should think carefully about your choice of loss function (i.e. you may want to apply your loss function to the size-factor-normalized data rather than the raw data, and you may want to only apply the loss function to the "highly variable genes"). 
 
 ```{r}
 cluster.sse <- function(trainDat, testDat, clusters.est, eps.train) {
@@ -85,7 +85,7 @@ for (k in 1:10) {
 naive.res
 ```
 
-We normalize the SSE results such that they lie between $0$ and $1$. This will later facilitate comparisons between methods. We then ploot the results. As expected, this naive method leads to a within-cluster SSE that decreases monotonically with $k$, and thus leaves no clear strategy for estimating $K^*$. 
+We normalize the SSE results such that they lie between $0$ and $1$. This will later facilitate comparisons between methods. We then plot the results. As expected, this naive method leads to a within-cluster SSE that decreases monotonically with $k$, and thus leaves no clear strategy for estimating $K^*$. 
 
 ```{r}
 naive.res.norm <- (naive.res - min(naive.res))/(max(naive.res)-min(naive.res))
@@ -101,11 +101,9 @@ ggplot(data=NULL)+
 
 # Count splitting (two folds)
 
-Splitting our data into a training set and a test set can help us avoid this issue. 
+Splitting our data into a training set and a test set can help us avoid this issue. We first consider Poisson count splitting. We note that, since the data are not actually Poisson distributed, we do not expect Poisson count splitting to solve our problem. 
 
-We first consider Poisson count splitting. We note that, since the data are not actually Poisson distributed, we do not expect Poisson count splitting to solve our problem. 
-
-```{r}
+```{r, message=F, warning=F}
 set.seed(5)
 poisSplit <- countsplit(X)
 Xtrain.pois <- poisSplit[[1]]
@@ -127,6 +125,7 @@ ggplot(data=NULL)+
   scale_x_continuous(breaks=0:11)+
   theme_bw()
 ```
+As expected, the loss function under Poisson count splitting is still monotonically decreasing in $k$. 
 
 If we knew the true value of the overdispersion parameters that generated our data, we could solve this problem by applying negative binomial count splitting with these known values. For this simulated dataset, we do know the true values, and so we can consider this option. We see that, unlike the other two options, negative binomial count splitting leads to a loss function that is actually minimized at $k=3$, which means that we correctly estimate $K^*$. 
 
@@ -158,14 +157,46 @@ ggplot(data=NULL)+
 
 In reality, we would need to use estimated values for the overdispersion parameters. In this toy setting with only two genes, estimating the overdispersion parameters will be difficult. For large datasets, packages such as ``sctransform`` obtain reasonable estimates of overdispersion parameters by making use of the fact that most genes tend to be null (not differentially expressed across any cells) and that genes with similar average expression levels have similar overdispersion parameters. We will explore the matter of estimated overdispersion parameters in future tutorials. 
 
-We can briefly see that, even in this small setting, we can obtain reasonable performance from 
+In this small setting, we do not obtain a very good estimate of the overdisperion parameters if we fit a negative binomial GLM with only an intercept to each gene. We estimate 0.6 and 1.0, whereas the true values are 3 and 6. 
 
 ```{r}
-summary(MASS::glm.nb(X[,1]~1))$theta
-summary(MASS::glm.nb(X[,2]~1))$theta
+overdisps.hat <- apply(X,2, function(u) summary(MASS::glm.nb(u~1))$theta)
+overdisps.hat
+true.overdisps
 ```
 
-We can quickly verify that negatib
+We can briefly explore the performance of NBCS with estimated values of the overdispersion, even though in this case we know that our estimates are poor. We see that the poor overdispersion estimates introduced too much noise into our dataset, falsely suggesting that there is only one true cluster in the data. 
+
+```{r}
+set.seed(3)
+estSplit <- countsplit(X, overdisps=overdisps.hat)
+Xtrain.est <- estSplit[[1]]
+Xtest.est <- estSplit[[2]]
+est.res <- rep(NA, 10)
+for (k in 1:10) {
+  clusters.est <- kmeans(log(Xtrain.est+1), centers=k)$cluster
+  est.res[k] <- cluster.sse(Xtrain.est,Xtest.est,clusters.est, 0.5)
+}
+est.res.norm <- (est.res - min(est.res))/(max(est.res)-min(est.res))
+
+ggplot(data=NULL)+
+  geom_pointline(aes(x=1:10, y=naive.res.norm, col="Naive"))+
+  geom_pointline(aes(x=1:10, y=pois.res.norm, col="Poisson count splitting"))+
+  geom_pointline(aes(x=1:10, y=known.res.norm, col="NB count splitting"))+
+  geom_pointline(aes(x=1:10, y=est.res.norm, col="NB count splitting (estimated)"))+
+  geom_vline(xintercept=3)+
+  theme_bw()+
+  ylab("Within-cluster SSE")+
+  xlab("Number of cluster (k)")+
+  geom_vline(aes(xintercept=3))+
+  labs(col="Method")+
+  scale_x_continuous(breaks=0:11)+
+  theme(legend.text = element_text(size=10))+
+  theme_bw()
+```
+
+We briefly repeat the work from above, but on a dataset with 1000 genes. In this setting, we are able to use `sctransform` to obtain better estimates of the overdispersion parameters, and therefore obtain better
+
 # Cross validation via count splitting
 
 We can improve on the previous analysis by replacing a single train/test split with cross validation. We do this in the negative binomial setting, as this is the correct setting for this analysis. 
@@ -298,7 +329,7 @@ p5+p6+plot_layout(guides="collect")
 
 Rather than evaluate our clusters based on within-cluster mean-squared-error, we can consider evaluating our clusters based on their stability. This idea will work best when the true clusters are well-separated and not nested within each-other. 
 
-To gain intuition for this idea, consider the following example dataset. It is similar to the dataset above, but the signal strength is stronger such that the clusters are more well-separated in log-space. 
+To gain intuition for this idea, consider the following example dataset. It is similar to the dataset above, but the signal strength is stronger such that the clusters are well-separated in log-space. 
 
 ```{r}
 set.seed(111)
@@ -348,7 +379,7 @@ p2 <- ggplot(data=NULL, aes(x=Xtest.known[,1]+1, y=Xtest.known[,2]+1, pch=as.fac
 p1+p2+plot_layout(guides="collect")
 ```
 
-The main idea is that, if we estimate three clusters on the training set and also estimate three clusters on the test set, the resulting clusterings should be very similar to one another because they are capturing true signal, not random noise.
+If we estimate three clusters on the training set and also estimate three clusters on the test set, the resulting clusterings should be very similar to one another because they are capturing true signal, not random noise. Here. the adjusted Rand Index tells us that the training clusters and the test clusters match perfectly (the adjusted Rand Index is 1). 
 
 ```{r}
 set.seed(333)
@@ -357,49 +388,36 @@ clusters.est.test <- kmeans(log(Xtest.known+1), centers=3)$cluster
 mclust::adjustedRandIndex(clusters.est.train,clusters.est.test)
 ```
 
-On the other hand, if we estiamte either two clusters or four clusters, there will be less similarity. 
+On the other hand, if we estimate either two clusters or four clusters, there will be less similarity, because random noise will be responsible for determining either the merged clusters (when we only estimate two) or the extra cluster (when we estimate four). 
+
+We can see that the adjusted Rand Indices are lower in each of these cases.  
 
 ```{r}
 set.seed(444)
 clusters.est.train <- kmeans(log(Xtrain.known+1), centers=2)$cluster
 clusters.est.test <- kmeans(log(Xtest.known+1), centers=2)$cluster
 mclust::adjustedRandIndex(clusters.est.train,clusters.est.test)
-
-ggplot(data=NULL, aes(x=Xtest.known[,1]+1, y=Xtest.known[,2]+1, pch=as.factor(clusters.est.train),
-                      col=as.factor(clusters.est.test)))+
-  geom_point()+
-  scale_x_log10()+
-  scale_y_log10()+
-  theme_bw()+
-  labs(shape="True Cluster")+
-  xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")+
-  ggtitle("Test set")
-
 ```
 
 ```{r}
 set.seed(5)
-clusters.est.train <- kmeans(log(Xtrain.known+1), centers=5)$cluster
-clusters.est.test <- kmeans(log(Xtest.known+1), centers=5)$cluster
+clusters.est.train <- kmeans(log(Xtrain.known+1), centers=4)$cluster
+clusters.est.test <- kmeans(log(Xtest.known+1), centers=4)$cluster
 mclust::adjustedRandIndex(clusters.est.train,clusters.est.test)
+```
 
-ggplot(data=NULL, aes(x=Xtest.known[,1]+1, y=Xtest.known[,2]+1, pch=as.factor(clusters.est.train),
-                      col=as.factor(clusters.est.test)))+
-  geom_point()+
-  scale_x_log10()+
-  scale_y_log10()+
-  theme_bw()+
-  labs(shape="True Cluster")+
-  xlab("Gene 1 (log scale)")+ ylab("Gene 2 (log scale)")+
-  ggtitle("Test set")
+We can visualize the results for four clusters, and can see that, even though the adjusted Rand Index is quite high, there is evidence of over-clustering in the data. We plot both sets of clusters overlaid with the training set counts, so that the two plots are comparable. While the red and the green clusters are perfectly reproruced between the training and the test set, the purple and blue clusters are not reproduclble, suggesting that they should be merged. 
+
+```{r}
+p1 <- ggplot(data=NULL, aes(x=Xtrain.known[,1]+1, y=Xtrain.known[,2]+1, col=as.factor(clusters.est.train)))+geom_point()+ggtitle("Clusters estimated with training set", "plotted on training set")
+p2 <- ggplot(data=NULL, aes(x=Xtrain.known[,1]+1, y=Xtrain.known[,2]+1, col=as.factor(clusters.est.test)))+geom_point()+ggtitle("Clusters estimated with test set", "plotted on training set")
+p1+p2 & guides(col=F) & theme_bw() & xlab("Xtrain1") & ylab("Xtrain2") & scale_y_log10() & scale_x_log10()
 
 ```
 
 
-The principle is simple: if we are estimating the correct number of clusters, our clusterings should be similar whether we estimate them on the training set or the test set. 
 
-We use the same data that we generated above. 
-
+If we repeat this process across 100 random splits, the adjusted Rand Index is consistently maximized at $3$, which is the correct number of clusters. 
 
 ```{r}
 stability.res <- matrix(NA, nrow=100, ncol=9)
@@ -424,45 +442,12 @@ ggplot(data=NULL)+
   xlab("Number of cluster (k)")+
   geom_vline(aes(xintercept=3))+
   labs(col="Method")+
+  ggtitle("Results across 100 random splits")+
   theme(legend.text = element_text(size=10))+
   theme_bw()
 ```
 
-```{r}
-n=1000
-p=1000
-lambda <- matrix(exp(rnorm(p)), nrow=n, ncol=p, byrow = TRUE)
-clusters <- sample(1:3, size=n, replace=TRUE)
-lambda[clusters==2,1:20] <-  lambda[clusters==2,1:20]*exp(2)
-lambda[clusters==3,11:20] <-  lambda[clusters==3,11:20]*exp(2)
-true.overdisps <- colMeans(lambda)
-X <- sapply(1:p, function(u) rnbinom(length(lambda[,u]), mu=lambda[,u], size= true.overdisps[u]))
+While stability-based evaluation metrics show a lot of promise for evaluating clusters on real scRNA-seq data, we must be cautious. The results above are extremely clean because the true clusters are well-separated and are not nested within one another. Any time that the true clusters are nested within one another, we cannot expect the adjusted Rand Index to be consistently maximized at the ``correct" number of clusters: the adjusted Rand Index will be high when we are estimating either the outer clusters or the inner nested clusters. 
 
-stability.res <- matrix(NA, nrow=100, ncol=9)
-
-for (t in 1:100) {
-  set.seed(t)
-  knownSplit <- countsplit(X, overdisps=true.overdisps)
-  Xtrain.known <- knownSplit[[1]]
-  Xtest.known <- knownSplit[[2]]
-  
-  for (k in 2:10) {
-    clusters.est.train <- kmeans(log(Xtrain.known+1), centers=k)$cluster
-    clusters.est.test <- kmeans(log(Xtest.known+1), centers=k)$cluster
-    stability.res[t,k-1] <- mclust::adjustedRandIndex(clusters.est.train,clusters.est.test)
-  }
-}
-ggplot(data=NULL)+
-  geom_pointline(aes(x=2:10, y=colMeans(stability.res), col="NB count splitting"))+
-  geom_vline(xintercept=3)+
-  theme_bw()+
-  ylab("Adjusted Rand Index")+
-  xlab("Number of cluster (k)")+
-  geom_vline(aes(xintercept=3))+
-  labs(col="Method")+
-  theme(legend.text = element_text(size=10))+
-  theme_bw()
-```
-
-
+However, these metrics can still be useful even when they are not maximized at the "correct" number of clusters, because they are interpretable, and we can also visualize the results by plotting our training set and test set clusters together, as above. 
 

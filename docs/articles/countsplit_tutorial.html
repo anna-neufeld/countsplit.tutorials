@@ -317,7 +317,7 @@ practice, we typically will not know the true value of the
 overdispersion parameter and will instead need to plug in a
 gene-specific estimate. A common way to estimate gene-specific
 overdispersion parameters is with the <code>sctransform</code> package
-in <code>R</code>. More specifically, if we call the <code>vst()</code>
+in <code>R</code>. More specifically, if we call the <code><a href="https://rdrr.io/pkg/sctransform/man/vst.html" class="external-link">vst()</a></code>
 function from the <code>sctransform</code> package on the gene-by-cell
 matrix of counts (the transpose of <span class="math inline">\(X\)</span>, in this case), the estimated
 gene-specific overdispersion paramateters are stored in the first column
@@ -335,7 +335,7 @@ of the <code>model_pars</code> section of the output.</p>
 <span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>  <span class="er">|</span>                                                                      <span class="er">|</span>   <span class="dv">0</span>%</span>
 <span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a>  <span class="sc">|</span>                                                                            </span>
 <span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a>  <span class="er">|======================================================================|</span> <span class="dv">100</span>%</span></code></pre></div>
-<p>By default, the <code>vst()</code> function does not necessarily
+<p>By default, the <code><a href="https://rdrr.io/pkg/sctransform/man/vst.html" class="external-link">vst()</a></code> function does not necessarily
 return an estimated overdispersion for every single gene in the dataset.
 For example, it only returns an estimated overdispersion for genes that
 were expressed in at least 5 cells, and that were not found to be

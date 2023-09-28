@@ -13,6 +13,9 @@
     <loc>/articles/MSE_tutorial.html</loc>
   </url>
   <url>
+    <loc>/articles/Seurat_stability_demonstration.html</loc>
+  </url>
+  <url>
     <loc>/articles/countsplit_tutorial.html</loc>
   </url>
   <url>
@@ -26,6 +29,12 @@
   </url>
   <url>
     <loc>/articles/scran_tutorial.html</loc>
+  </url>
+  <url>
+    <loc>/articles/seurat.nb.html</loc>
+  </url>
+  <url>
+    <loc>/articles/seurat_cluster_cross_val.html</loc>
   </url>
   <url>
     <loc>/articles/seurat_tutorial.html</loc>

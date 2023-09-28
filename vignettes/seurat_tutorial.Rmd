@@ -1,5 +1,5 @@
 ---
-title: "Tutorial: count splitting with seurat" 
+title: "Tutorial: count splitting with Seurat" 
 output: rmarkdown::html_vignette
 bibliography: latent.bib
 vignette: >
@@ -16,7 +16,7 @@ Before using this tutorial, we recommend that you read through our [introductory
 
 # Overview
 
-The purpose of this tutorial is to reproduce the analysis from the Seurat [clustering tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html) while using `countsplit`. The Seurat tutorial performs clustering and differential expression on the same dataset. As shown in our [introductory tutorial](https://anna-neufeld.github.io/countsplit/articles/countsplit_tutorial.html), this can lead to inflated Type 1 error rates, and so we refer to this practice as the "naive" method. For each of the following tasks, we will demonstrate the proper application of count splitting and compare this approach to that used in the original Seurat tutorial:
+The purpose of this tutorial is to reproduce the analysis from the Seurat [clustering tutorial](https://satijalab.org/seurat/articles/pbmc3k_tutorial.html) while using `countsplit`. The Seurat tutorial performs clustering and differential expression on the same dataset. As shown in our [introductory tutorial](https://anna-neufeld.github.io/countsplit.tutorials/articles/countsplit_tutorial.html), this can lead to inflated Type 1 error rates, and so we refer to this practice as the "naive" method. For each of the following tasks, we will demonstrate the proper application of count splitting and compare this approach to that used in the original Seurat tutorial:
 
 - **Preprocessing:** Count splitting applies preprocessing steps to the training dataset, whereas the naive method applies preprocessing steps to the full dataset. 
 - **Clustering:** Count splitting clusters the preprocessed training dataset, whereas the naive method clusters the preprocessed full dataset. We expect that count splitting will yield similar clusters to the naive method in the presence of strong clustering signal, but may disagree if this signal is weak.
@@ -47,6 +47,7 @@ Finally, we load the packages that will be used in this tutorial. If any of the 
 ```{r}
 library(Seurat)
 library(countsplit)
+library(Matrix)
 library(ggplot2)
 library(patchwork)
 library(mclust)
@@ -119,7 +120,7 @@ dim(Xtestsubset)
 
 We also note that `pbmc.train` and `pbmc` do not have the same dimensions, as the original requirement about the number of non-zero counts for each gene/cell was applied separately to the full data and the training set. Later, when it is needed to make comparisons, we will subset `pbmc` appropriately. 
 
-```{r, collapse=TRUE}
+```{r namethisone, collapse=TRUE}
 dim(pbmc.train)
 dim(pbmc)
 ```
@@ -130,16 +131,15 @@ For our count splitting analysis, all steps in the preprocessing workflow are pe
 
 We take this time to point out some intricacies of the ``Seurat`` object that could become confusing in future analyses. A single assay within a ``Seurat`` object has three slots: ``counts``, ``data``, and ``scale.data``. At this point in the analysis, ``data`` and ``counts`` both store the raw counts, and ``scale.data`` is empty. 
 
-```{r, collapse=TRUE}
-all.equal(GetAssayData(pbmc.train, "counts"), GetAssayData(pbmc.train, "data"))
-GetAssayData(pbmc.train, "scale.data")
+```{r namedchunk}
+all.equal(GetAssayData(pbmc.train, slot="counts"), GetAssayData(pbmc.train, slot="data"))
 ```
 
 These assays will change as we run further preprocessing steps, and this will be important to keep in mind. We next normalize and compute the set of highly variable features, as in the Seurat tutorial. Note that normalizing changes the ``data`` slot within of `pbmc.train` such that it stores normalized data, rather than counts. 
 
-```{r}
+```{r alsonamed}
 pbmc.train <- NormalizeData(pbmc.train)
-all.equal(GetAssayData(pbmc.train, "counts"), GetAssayData(pbmc.train, "data"))
+all.equal(GetAssayData(pbmc.train, slot="counts"), GetAssayData(pbmc.train, slot="data"))
 ```
 
 Computing the set of highly variable features does not alter the dimension of the dataset. All features are retained, but these highly variable features are the ones that will be used downstream during dimension reduction. 

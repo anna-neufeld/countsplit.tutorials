@@ -9,6 +9,8 @@ The motivation for this method is described in Neufeld et al., 2022 [(link to pa
 
 The tutorials on this website currently focus on the Poisson setting and on the inference after latent variable estimation setting, but they are being updated to include more negative binomial examples and more cross validation examples. 
 
+This material is based upon research supported in part by the Office of Naval Research under Award Number N000142312589 and the National Science Foundation under Award Number 2322920.
+
 
 How can I get countsplit?
 -----

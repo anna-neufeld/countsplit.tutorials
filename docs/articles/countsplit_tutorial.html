@@ -6,20 +6,19 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tutorial: differential expression analysis on single cell RNA-seq data • countsplit.tutorials</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="Tutorial: differential expression analysis on single cell RNA-seq data">
-<meta property="og:description" content="countsplit.tutorials">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -66,7 +65,7 @@
 </div>
 <!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
@@ -75,7 +74,7 @@
 single cell RNA-seq data</h1>
             
       
-      
+
       <div class="hidden name"><code>countsplit_tutorial.Rmd</code></div>
 
     </div>
@@ -104,10 +103,15 @@ running <code>install.packages("remotes")</code>, then type</p>
 <div class="section level2">
 <h2 id="simulated-poisson-data-with-no-true-signal-">Simulated Poisson data with no true signal.<a class="anchor" aria-label="anchor" href="#simulated-poisson-data-with-no-true-signal-"></a>
 </h2>
-<p>First suppose that we have <span class="math inline">\(n=1000\)</span> cells and <span class="math inline">\(p=200\)</span> genes. Suppose that every count
-<span class="math inline">\(\textbf{X}_{ij}\)</span> is drawn from a
-<span class="math inline">\(\text{Poisson}(5)\)</span> distribution. We
-first generate this data.</p>
+<p>First suppose that we have
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mo>=</mo><mn>1000</mn></mrow><annotation encoding="application/x-tex">n=1000</annotation></semantics></math>
+cells and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>=</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">p=200</annotation></semantics></math>
+genes. Suppose that every count
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mtext mathvariant="bold">𝐗</mtext><mrow><mi>i</mi><mi>j</mi></mrow></msub><annotation encoding="application/x-tex">\textbf{X}_{ij}</annotation></semantics></math>
+is drawn from a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">Poisson</mtext><mrow><mo stretchy="true" form="prefix">(</mo><mn>5</mn><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\text{Poisson}(5)</annotation></semantics></math>
+distribution. We first generate this data.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
@@ -143,12 +147,13 @@ clustering and differential expression testing as the “naive method” or
 k=2 on the log-transformed data with a pseudocount of 1, and saves the
 cluster assignments as <code>clusters.full</code>. The second line tests
 for differential gene expression using Poisson GLMs. For every gene
-<span class="math inline">\(X_j\)</span> in X, we fit a Poisson GLM of
-<span class="math inline">\(X_j\)</span> on <code>clusters.full</code>,
-and save the summary of the slope coefficient in
-<code>results.naive</code>. As shown in the output, we have saved a
-slope coefficient estimate, a standard error, a z-value, and a p-value
-for every gene in the dataset.</p>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>j</mi></msub><annotation encoding="application/x-tex">X_j</annotation></semantics></math>
+in X, we fit a Poisson GLM of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>j</mi></msub><annotation encoding="application/x-tex">X_j</annotation></semantics></math>
+on <code>clusters.full</code>, and save the summary of the slope
+coefficient in <code>results.naive</code>. As shown in the output, we
+have saved a slope coefficient estimate, a standard error, a z-value,
+and a p-value for every gene in the dataset.</p>
 <p>Even in these first 6 rows of results, we can see that the naive
 method assigns small p-values to many genes, despite the fact that no
 genes are truly differentially expressed in this data. We can make a
@@ -157,7 +162,7 @@ are not uniformly distributed and thus do not control the Type 1
 error.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data<span class="op">=</span><span class="cn">NULL</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample<span class="op">=</span><span class="va">results.naive</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">geom_qq</a></span><span class="op">(</span>distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_abline</a></span><span class="op">(</span>col<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-6-1.png" width="700"></p>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-6-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="poisson-count-splitting">Poisson count splitting<a class="anchor" aria-label="anchor" href="#poisson-count-splitting"></a>
@@ -213,17 +218,18 @@ distributed. Since no genes are differentially expressed in our data,
 this means that count splitting controls the Type 1 error.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data<span class="op">=</span><span class="cn">NULL</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample<span class="op">=</span><span class="va">results.countsplit</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">geom_qq</a></span><span class="op">(</span>distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_abline</a></span><span class="op">(</span>col<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-9-1.png" width="700"></p>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-9-1.png" class="r-plt" alt="" width="700"></p>
 <p>The crucial property that ensures that count splitting controls the
 Type 1 error in this setting is independence between <code>Xtrain</code>
 and <code>Xtest</code>. We can see that the columns of
 <code>Xtrain</code> are independent of the columns of <code>Xtest</code>
 in this data with no signal by looking at the sample correlations, which
-are centered around <span class="math inline">\(0\)</span>.</p>
+are centered around
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">p</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">Xtrain</span><span class="op">[</span>,<span class="va">u</span><span class="op">]</span>, <span class="va">Xtest</span><span class="op">[</span>,<span class="va">u</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">cors</span>, xlim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-10-1.png" width="700">
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="700">
 In summary, count splitting controls the Type 1 error when there is no
 true signal in the data.</p>
 </div>
@@ -251,10 +257,11 @@ parameterization of the negative binomial, in which the mean is given by
 <p>Once again, in this part of the tutorial, we will cluster the data to
 estimate cell types and then test for differential expression. Since
 there are no true cell types and no truly differentially expressed genes
-in this data (all genes and all cells have mean <span class="math inline">\(5\)</span>), a test of differential expression
-that controls the Type 1 error rate should give uniformly distributed
-p-values on this data. We will compare the naive method to three version
-of count splitting.</p>
+in this data (all genes and all cells have mean
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>5</mn><annotation encoding="application/x-tex">5</annotation></semantics></math>),
+a test of differential expression that controls the Type 1 error rate
+should give uniformly distributed p-values on this data. We will compare
+the naive method to three version of count splitting.</p>
 <p>We first note that the naive method still fails to control the Type 1
 error rate. We use a negative binomial GLM (as implemented in the
 <code>MASS</code> package, rather than a Poisson GLM, throughout this
@@ -263,7 +270,7 @@ section).</p>
 <code class="sourceCode R"><span><span class="va">clusters.full</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/kmeans.html" class="external-link">kmeans</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">X</span><span class="op">+</span><span class="fl">1</span><span class="op">)</span>, centers<span class="op">=</span><span class="fl">2</span><span class="op">)</span><span class="op">$</span><span class="va">cluster</span></span>
 <span><span class="va">results.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">X</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu">MASS</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/MASS/man/glm.nb.html" class="external-link">glm.nb</a></span><span class="op">(</span><span class="va">u</span><span class="op">~</span><span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">as.factor</a></span><span class="op">(</span><span class="va">clusters.full</span><span class="op">)</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span><span class="fl">2</span>,<span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span>data<span class="op">=</span><span class="cn">NULL</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample<span class="op">=</span><span class="va">results.naive</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span><span class="op">)</span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">geom_qq</a></span><span class="op">(</span>distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_abline</a></span><span class="op">(</span>col<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-12-1.png" width="700"></p>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-12-1.png" class="r-plt" alt="" width="700"></p>
 <p>Unfortunately, we now also note that the default settings of count
 splitting will cause us to fail to control the Type 1 error rate. Note
 that we omit the arguments for <code>folds</code> and
@@ -281,7 +288,7 @@ for count splitting.</p>
 <span>  distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">geom_qq</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample<span class="op">=</span><span class="va">results.countsplit</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span>, col<span class="op">=</span><span class="st">"Poisson count splitting"</span><span class="op">)</span>, distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_abline</a></span><span class="op">(</span>col<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-13-1.png" width="700"></p>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="" width="700"></p>
 <p>By default, the <code>countsplit</code> function assumes that your
 data follow a Poisson distribution. Now that the data are not Poisson
 distributed, the default settings of <code>countsplit</code> fail to
@@ -292,12 +299,15 @@ amount of overdispersion in the negative binomial data increases.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cors</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="va">p</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">Xtrain</span><span class="op">[</span>,<span class="va">u</span><span class="op">]</span>, <span class="va">Xtest</span><span class="op">[</span>,<span class="va">u</span><span class="op">]</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">cors</span>, xlim<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">1</span>,<span class="fl">1</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-14-1.png" width="700"></p>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-14-1.png" class="r-plt" alt="" width="700"></p>
 <p>To deal with this, we must tell the <code>countsplit</code> function
 that our data are overdispersed. In this toy setting, we know the true
-value of the overdispersion parameter; it is <span class="math inline">\(5\)</span> for all genes. So we can perform the
-ideal version of negative binomial count splitting where we plug in the
-value of <span class="math inline">\(5\)</span> for every gene.</p>
+value of the overdispersion parameter; it is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>5</mn><annotation encoding="application/x-tex">5</annotation></semantics></math>
+for all genes. So we can perform the ideal version of negative binomial
+count splitting where we plug in the value of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>5</mn><annotation encoding="application/x-tex">5</annotation></semantics></math>
+for every gene.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">splitNB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/countsplit/man/countsplit.html" class="external-link">countsplit</a></span><span class="op">(</span><span class="va">X</span>, overdisps<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">5</span>,<span class="va">p</span><span class="op">)</span><span class="op">)</span></span>
@@ -311,31 +321,27 @@ value of <span class="math inline">\(5\)</span> for every gene.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">geom_qq</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample<span class="op">=</span><span class="va">results.countsplit</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span>, col<span class="op">=</span><span class="st">"Poisson count splitting"</span><span class="op">)</span>, distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">geom_qq</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample<span class="op">=</span><span class="va">results.countsplit.NB</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span>, col<span class="op">=</span><span class="st">"Ideal NB count splitting"</span><span class="op">)</span>, distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_abline</a></span><span class="op">(</span>col<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-15-1.png" width="700"></p>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-15-1.png" class="r-plt" alt="" width="700"></p>
 <p>We see that we have recovered Type 1 error control. Unfortunately, in
 practice, we typically will not know the true value of the
 overdispersion parameter and will instead need to plug in a
 gene-specific estimate. A common way to estimate gene-specific
 overdispersion parameters is with the <code>sctransform</code> package
-in <code>R</code>. More specifically, if we call the <code><a href="https://rdrr.io/pkg/sctransform/man/vst.html" class="external-link">vst()</a></code>
+in <code>R</code>. More specifically, if we call the <code>vst()</code>
 function from the <code>sctransform</code> package on the gene-by-cell
-matrix of counts (the transpose of <span class="math inline">\(X\)</span>, in this case), the estimated
-gene-specific overdispersion paramateters are stored in the first column
-of the <code>model_pars</code> section of the output.</p>
-<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">rownames</span>(X) <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span>n</span>
-<span id="cb15-2"><a href="#cb15-2" tabindex="-1"></a><span class="fu">colnames</span>(X) <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span>p</span>
-<span id="cb15-3"><a href="#cb15-3" tabindex="-1"></a>overdisps.est <span class="ot">&lt;-</span> sctransform<span class="sc">::</span><span class="fu">vst</span>(<span class="fu">t</span>(X))<span class="sc">$</span>model_pars[,<span class="dv">1</span>]</span>
-<span id="cb15-4"><a href="#cb15-4" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb15-5"><a href="#cb15-5" tabindex="-1"></a>  <span class="sc">|</span>                                                                            </span>
-<span id="cb15-6"><a href="#cb15-6" tabindex="-1"></a>  <span class="er">|</span>                                                                      <span class="er">|</span>   <span class="dv">0</span>%</span>
-<span id="cb15-7"><a href="#cb15-7" tabindex="-1"></a>  <span class="sc">|</span>                                                                            </span>
-<span id="cb15-8"><a href="#cb15-8" tabindex="-1"></a>  <span class="er">|======================================================================|</span> <span class="dv">100</span>%</span>
-<span id="cb15-9"><a href="#cb15-9" tabindex="-1"></a><span class="do">## </span></span>
-<span id="cb15-10"><a href="#cb15-10" tabindex="-1"></a>  <span class="sc">|</span>                                                                            </span>
-<span id="cb15-11"><a href="#cb15-11" tabindex="-1"></a>  <span class="er">|</span>                                                                      <span class="er">|</span>   <span class="dv">0</span>%</span>
-<span id="cb15-12"><a href="#cb15-12" tabindex="-1"></a>  <span class="sc">|</span>                                                                            </span>
-<span id="cb15-13"><a href="#cb15-13" tabindex="-1"></a>  <span class="er">|======================================================================|</span> <span class="dv">100</span>%</span></code></pre></div>
-<p>By default, the <code><a href="https://rdrr.io/pkg/sctransform/man/vst.html" class="external-link">vst()</a></code> function does not necessarily
+matrix of counts (the transpose of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>,
+in this case), the estimated gene-specific overdispersion paramateters
+are stored in the first column of the <code>model_pars</code> section of
+the output.</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="va">n</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">1</span><span class="op">:</span><span class="va">p</span></span>
+<span><span class="va">overdisps.est</span> <span class="op">&lt;-</span> <span class="fu">sctransform</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/sctransform/man/vst.html" class="external-link">vst</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">X</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">model_pars</span><span class="op">[</span>,<span class="fl">1</span><span class="op">]</span></span>
+<span><span class="co">##   |                                                                              |                                                                      |   0%</span></span>
+<span><span class="co">##   |                                                                              |======================================================================| 100%</span></span>
+<span><span class="co">##   |                                                                              |                                                                      |   0%  |                                                                              |======================================================================| 100%</span></span></code></pre></div>
+<p>By default, the <code>vst()</code> function does not necessarily
 return an estimated overdispersion for every single gene in the dataset.
 For example, it only returns an estimated overdispersion for genes that
 were expressed in at least 5 cells, and that were not found to be
@@ -347,10 +353,13 @@ cells.</p>
 <span><span class="co">## [1] TRUE</span></span></code></pre></div>
 <p>We can see that, in this case, the estimation of the overdispersion
 parameters went fairly well. All of the true overdispersion parameters
-are 5, and the estimated overdispersion parameters are all between <span class="math inline">\(4\)</span> and <span class="math inline">\(6\)</span>.</p>
+are 5, and the estimated overdispersion parameters are all between
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>4</mn><annotation encoding="application/x-tex">4</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>6</mn><annotation encoding="application/x-tex">6</annotation></semantics></math>.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/hist.html" class="external-link">hist</a></span><span class="op">(</span><span class="va">overdisps.est</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-18-1.png" width="700"></p>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-18-1.png" class="r-plt" alt="" width="700"></p>
 <p>We are now prepared to apply negative binomial count splitting with
 these estimated parameters. We see that the performance is approximately
 as good as it was in the ideal version of negative binomial count
@@ -369,7 +378,7 @@ splitting.</p>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">geom_qq</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample<span class="op">=</span><span class="va">results.countsplit.NB</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span>, col<span class="op">=</span><span class="st">"Ideal NB count splitting"</span><span class="op">)</span>, distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span></span>
 <span>    <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_qq.html" class="external-link">geom_qq</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>sample<span class="op">=</span><span class="va">results.countsplit.NB.est</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span>, col<span class="op">=</span><span class="st">"Estimated NB count splitting"</span><span class="op">)</span>, distribution<span class="op">=</span><span class="fu">stats</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/r/stats/Uniform.html" class="external-link">qunif</a></span><span class="op">)</span><span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_abline</a></span><span class="op">(</span>col<span class="op">=</span><span class="st">"red"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-19-1.png" width="700"></p>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-19-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 <div class="section level2">
 <h2 id="simulated-poisson-data-with-true-signal">Simulated Poisson data with true signal<a class="anchor" aria-label="anchor" href="#simulated-poisson-data-with-true-signal"></a>
@@ -377,12 +386,20 @@ splitting.</p>
 <p>We now return to the Poisson setting, for simplicity. We demonstrate
 the performance of count splitting on a simple simulated dataset that
 contains two true clusters. We first randomly assign the cells to one of
-two true clusters. We then generate data such that <span class="math inline">\(X_{ij} \sim
-\mathrm{Poisson}(\Lambda_{ij})\)</span>. Genes 1-10 are differentially
-expressed– for <span class="math inline">\(j=1,\ldots,10\)</span>, <span class="math inline">\(\Lambda_{ij} = 5\)</span> for cells in cluster
-<span class="math inline">\(0\)</span> and <span class="math inline">\(\Lambda_{ij}=10\)</span> for cells in cluster
-<span class="math inline">\(1\)</span>. Genes 11-200 are not
-differentially expressed (<span class="math inline">\(\Lambda_{ij}=5\)</span> for all cells).</p>
+two true clusters. We then generate data such that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>X</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>∼</mo><mrow><mi mathvariant="normal">P</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">i</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">o</mi><mi mathvariant="normal">n</mi></mrow><mrow><mo stretchy="true" form="prefix">(</mo><msub><mi>Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo stretchy="true" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">X_{ij} \sim \mathrm{Poisson}(\Lambda_{ij})</annotation></semantics></math>.
+Genes 1-10 are differentially expressed– for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>j</mi><mo>=</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">j=1,\ldots,10</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">\Lambda_{ij} = 5</annotation></semantics></math>
+for cells in cluster
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">\Lambda_{ij}=10</annotation></semantics></math>
+for cells in cluster
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>.
+Genes 11-200 are not differentially expressed
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Λ</mi><mrow><mi>i</mi><mi>j</mi></mrow></msub><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">\Lambda_{ij}=5</annotation></semantics></math>
+for all cells).</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">n</span> <span class="op">&lt;-</span> <span class="fl">1000</span></span>
@@ -429,8 +446,10 @@ later when we attempt to compare models.</p>
 <div class="section level3">
 <h3 id="effect-of-using-xtest-for-inference">Effect of using Xtest for inference<a class="anchor" aria-label="anchor" href="#effect-of-using-xtest-for-inference"></a>
 </h3>
-<p>We now compare what happens when we regress <span class="math inline">\(X_j\)</span> on the true clusters to what happens
-if we regress <span class="math inline">\(X_j^{\mathrm{test}}\)</span>
+<p>We now compare what happens when we regress
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>j</mi></msub><annotation encoding="application/x-tex">X_j</annotation></semantics></math>
+on the true clusters to what happens if we regress
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msubsup><mi>X</mi><mi>j</mi><mrow><mi mathvariant="normal">t</mi><mi mathvariant="normal">e</mi><mi mathvariant="normal">s</mi><mi mathvariant="normal">t</mi></mrow></msubsup><annotation encoding="application/x-tex">X_j^{\mathrm{test}}</annotation></semantics></math>
 on the true clusters. We use the code below to fit a Poisson GLM of
 every gene on the true clusters; we save both the slope and the
 intercept. We are interested in the GLM slopes, as the GLM slopes are
@@ -461,16 +480,17 @@ eachother. The intercepts, on the other hand, get shifted by
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"Slopes from X"</span><span class="op">)</span><span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Slopes from Xtest"</span><span class="op">)</span><span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Slopes"</span><span class="op">)</span><span class="op">+</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span>
 <span><span class="va">p1</span> <span class="op">+</span> <span class="va">p2</span> <span class="op">+</span> <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>guides<span class="op">=</span><span class="st">"collect"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-25-1.png" width="700"></p>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-25-1.png" class="r-plt" alt="" width="700"></p>
 </div>
 <div class="section level3">
 <h3 id="overall-comparison-of-count-splitting-to-ideal-method">Overall comparison of count splitting to ideal method<a class="anchor" aria-label="anchor" href="#overall-comparison-of-count-splitting-to-ideal-method"></a>
 </h3>
 <p>Finally, we compare the overall slope and intercept estimates that we
 get from count splitting to what we would get in the ideal setting where
-we get to regress <span class="math inline">\(X_j\)</span> on the true
-clusters. Note that <code>coeffs.ideal</code> is identical to
-<code>coeffs.X</code> from the previous section; we reproduce it here
+we get to regress
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>X</mi><mi>j</mi></msub><annotation encoding="application/x-tex">X_j</annotation></semantics></math>
+on the true clusters. Note that <code>coeffs.ideal</code> is identical
+to <code>coeffs.X</code> from the previous section; we reproduce it here
 for convenience. Note also that we regress <code>Xtest</code> on
 <code>as.factor(clusters.train==1)</code>, rather than
 <code>as.factor(clusters.train)</code>, simply because we saw above that
@@ -494,7 +514,7 @@ the two models have the same sign.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"Slopes from ideal method"</span><span class="op">)</span><span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"Slopes from count splitting"</span><span class="op">)</span><span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Slopes"</span><span class="op">)</span></span>
 <span><span class="va">p1</span> <span class="op">+</span> <span class="va">p2</span> <span class="op">+</span> <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>guides<span class="op">=</span><span class="st">"collect"</span><span class="op">)</span> <span class="op">&amp;</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-26-1.png" width="700"></p>
+<p><img src="countsplit_tutorial_files/figure-html/unnamed-chunk-26-1.png" class="r-plt" alt="" width="700"></p>
 <p>Overall, we see general agreement between the parameters estimated
 via countsplitting and those estimated via the ideal method. The slopes
 tend to be the same, whereas the intercepts are shifted by
@@ -507,9 +527,7 @@ differential expression across clusters.</p>
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
-    </nav>
-</div>
+      </div>
 
 </div>
 
@@ -522,16 +540,16 @@ differential expression across clusters.</p>
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
       </footer>
 </div>
 
-  
 
 
-  
+
+
 
   </body>
 </html>

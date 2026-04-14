@@ -6,20 +6,19 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Tutorial: countsplitting and scran • countsplit.tutorials</title>
-<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+<!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
 <script src="../pkgdown.js"></script><meta property="og:title" content="Tutorial: countsplitting and scran">
-<meta property="og:description" content="countsplit.tutorials">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
 <![endif]-->
 </head>
 <body data-spy="scroll" data-target="#toc">
-    
+
 
     <div class="container template-article">
       <header><div class="navbar navbar-default navbar-fixed-top" role="navigation">
@@ -66,7 +65,7 @@
 </div>
 <!--/.navbar -->
 
-      
+
 
       </header><div class="row">
   <div class="col-md-9 contents">
@@ -74,7 +73,7 @@
       <h1 data-toc-skip>Tutorial: countsplitting and scran</h1>
             
       
-      
+
       <div class="hidden name"><code>scran_tutorial.Rmd</code></div>
 
     </div>
@@ -117,7 +116,7 @@ run:</p>
 <p>Next, you should load the package, along with others that we will use
 in this tutorial.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scran</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/MarioniLab/scran/" class="external-link">scran</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/anna-neufeld/countsplit" class="external-link">countsplit</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">countsplit.tutorials</span><span class="op">)</span></span></code></pre></div>
@@ -250,7 +249,7 @@ visualize them below.</p>
 <span><span class="co">## <span style="color: #0000BB;">&lt;reduced.dim.matrix/matrix&gt;</span>. Defaulting to continuous.</span></span>
 <span><span class="co">## Don't know how to automatically pick scale for object of type</span></span>
 <span><span class="co">## <span style="color: #0000BB;">&lt;reduced.dim.matrix/matrix&gt;</span>. Defaulting to continuous.</span></span></code></pre>
-<p><img src="scran_tutorial_files/figure-html/unnamed-chunk-12-1.png" width="90%"></p>
+<p><img src="scran_tutorial_files/figure-html/unnamed-chunk-12-1.png" class="r-plt" alt="" width="90%"></p>
 </div>
 <div class="section level2">
 <h2 id="differential-expression-testing">Differential expression testing<a class="anchor" aria-label="anchor" href="#differential-expression-testing"></a>
@@ -284,21 +283,21 @@ expressed at alpha=0.01.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">results</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">0.01</span><span class="op">)</span> </span>
 <span><span class="co">## </span></span>
 <span><span class="co">## FALSE  TRUE </span></span>
-<span><span class="co">##   439    61</span></span></code></pre></div>
+<span><span class="co">##   440    60</span></span></code></pre></div>
 <p>We can view the names of these highly significant genes below.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">results</span><span class="op">[</span><span class="va">results</span><span class="op">[</span>,<span class="fl">4</span><span class="op">]</span> <span class="op">&lt;</span> <span class="fl">0.01</span>,<span class="op">]</span>, n<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span>
-<span><span class="co">##           Estimate Std. Error   z value     Pr(&gt;|z|)</span></span>
-<span><span class="co">## C3orf62  1.2324039 0.43690137  2.820783 4.790661e-03</span></span>
-<span><span class="co">## PPFIA4   1.6967096 0.62676308  2.707099 6.787406e-03</span></span>
-<span><span class="co">## CDCA7L   0.6235322 0.14797067  4.213890 2.510091e-05</span></span>
-<span><span class="co">## ZFR      0.2439864 0.08567689  2.847750 4.402946e-03</span></span>
-<span><span class="co">## SELENOT  0.5564246 0.18215736  3.054637 2.253332e-03</span></span>
-<span><span class="co">## COL11A2  2.9288532 1.08012328  2.711592 6.696103e-03</span></span>
-<span><span class="co">## FAM241A  1.6967096 0.62676433  2.707093 6.787516e-03</span></span>
-<span><span class="co">## PPP2R5A  0.5493071 0.21081767  2.605603 9.171275e-03</span></span>
-<span><span class="co">## ZNF138  -0.8594601 0.32129460 -2.674991 7.473132e-03</span></span>
-<span><span class="co">## ZNF436   1.6070974 0.57008420  2.819053 4.816561e-03</span></span></code></pre></div>
+<span><span class="co">##           Estimate Std. Error   z value      Pr(&gt;|z|)</span></span>
+<span><span class="co">## PPFIA4   1.4853742 0.52704414  2.818311  4.827706e-03</span></span>
+<span><span class="co">## CDCA7L   0.6667219 0.13899707  4.796662  1.613316e-06</span></span>
+<span><span class="co">## ZFR      0.2300289 0.08036867  2.862172  4.207492e-03</span></span>
+<span><span class="co">## SELENOT  0.4791352 0.17424256  2.749817  5.962849e-03</span></span>
+<span><span class="co">## COL11A2  2.1785214 0.81649008  2.668154  7.626926e-03</span></span>
+<span><span class="co">## ZNF138  -0.9238206 0.30746879 -3.004599  2.659308e-03</span></span>
+<span><span class="co">## ZNF436   1.5499127 0.57007870  2.718770  6.552520e-03</span></span>
+<span><span class="co">## MYL3     4.1843745 0.16801337 24.905009 6.566248e-137</span></span>
+<span><span class="co">## EDEM3    0.5632183 0.21669065  2.599181  9.344635e-03</span></span>
+<span><span class="co">## MTUS1    1.3821900 0.31984429  4.321446  1.550097e-05</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="using-scran">Using scran<a class="anchor" aria-label="anchor" href="#using-scran"></a>
@@ -315,6 +314,12 @@ count matrix after. Since we do not anticipate needing any metadata in
 this section, we construct the object from scratch.</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cm.test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/SingleCellExperiment.html" class="external-link">SingleCellExperiment</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>counts<span class="op">=</span><span class="va">Xtest</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning in S4Vectors:::anyMissing(runValue(x_seqnames)): 'S4Vectors:::anyMissing()' is deprecated.</span></span>
+<span><span class="co">## Use 'anyNA()' instead.</span></span>
+<span><span class="co">## See help("Deprecated")</span></span></code></pre>
+<pre><code><span><span class="co">## Warning in S4Vectors:::anyMissing(runValue(strand(x))): 'S4Vectors:::anyMissing()' is deprecated.</span></span>
+<span><span class="co">## Use 'anyNA()' instead.</span></span>
+<span><span class="co">## See help("Deprecated")</span></span></code></pre>
 <p>The <code><a href="https://rdrr.io/pkg/scran/man/scoreMarkers.html" class="external-link">scoreMarkers()</a></code> function needs access to the
 log-normalized counts assay (<code><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html" class="external-link">logcounts()</a></code>) in the
 <code>cm.test</code> object. To fill in this assay, we need to run the
@@ -323,43 +328,43 @@ like to normalize the test matrix using size factors computed on the
 training set (this follows our general philosophy of performing all
 preprocessing steps on the training set). Thus, we obtain size factors
 from the training set before calling <code><a href="https://rdrr.io/pkg/scuttle/man/logNormCounts.html" class="external-link">logNormCounts()</a></code>.</p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">sizeFactors</a></span><span class="op">(</span><span class="va">cm.test</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">sizeFactors</a></span><span class="op">(</span><span class="va">cm.train</span><span class="op">)</span></span>
 <span><span class="va">cm.test</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/logNormCounts.html" class="external-link">logNormCounts</a></span><span class="op">(</span><span class="va">cm.test</span><span class="op">)</span> </span></code></pre></div>
 <p>This first element in <code>results</code> shows marker genes that
 distinguish cluster 1 from all other clusters.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu">scran</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/scran/man/findMarkers.html" class="external-link">findMarkers</a></span><span class="op">(</span> </span>
 <span><span class="va">cm.test</span>, groups<span class="op">=</span> <span class="va">clusters.train</span>,</span>
 <span> pval.type <span class="op">=</span> <span class="st">"all"</span><span class="op">)</span> </span>
 <span><span class="va">results</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 <pre><code><span><span class="co">## DataFrame with 21971 rows and 9 columns</span></span>
-<span><span class="co">##               p.value         FDR summary.logFC     logFC.2     logFC.3</span></span>
-<span><span class="co">##             &lt;numeric&gt;   &lt;numeric&gt;     &lt;numeric&gt;   &lt;numeric&gt;   &lt;numeric&gt;</span></span>
-<span><span class="co">## TPM1      1.08718e-87 2.38865e-83      1.524155    -2.60820   -1.691339</span></span>
-<span><span class="co">## TNNT2     3.92556e-20 3.42042e-16      0.243453    -2.74309   -0.629304</span></span>
-<span><span class="co">## MYL7      4.67036e-20 3.42042e-16     -0.619474    -3.00084   -0.619474</span></span>
-<span><span class="co">## NEXN      6.38871e-17 3.50916e-13      0.180813    -1.26727   -0.599001</span></span>
-<span><span class="co">## ANKRD1    8.78375e-17 3.85975e-13      0.256620    -1.45896   -1.366888</span></span>
-<span><span class="co">## ...               ...         ...           ...         ...         ...</span></span>
-<span><span class="co">## GABRQ               1           1             0  0.00000000  0.00000000</span></span>
-<span><span class="co">## CLIC2               1           1             0  0.00000000 -0.00355741</span></span>
-<span><span class="co">## EEF1A1P41           1           1             0 -0.00491876  0.00000000</span></span>
-<span><span class="co">## PCDH11Y             1           1             0  0.00000000  0.00000000</span></span>
-<span><span class="co">## TMSB4Y              1           1             0  0.00000000  0.00000000</span></span>
-<span><span class="co">##                logFC.4      logFC.5      logFC.6     logFC.7</span></span>
-<span><span class="co">##              &lt;numeric&gt;    &lt;numeric&gt;    &lt;numeric&gt;   &lt;numeric&gt;</span></span>
-<span><span class="co">## TPM1          1.393705     1.539964     1.764288    1.524155</span></span>
-<span><span class="co">## TNNT2         0.261539     0.284571     0.299269    0.243453</span></span>
-<span><span class="co">## MYL7          0.511705     0.595673     0.518480    0.422453</span></span>
-<span><span class="co">## NEXN          0.165924     0.185703     0.184252    0.180813</span></span>
-<span><span class="co">## ANKRD1        0.300527     0.322272     0.295123    0.256620</span></span>
-<span><span class="co">## ...                ...          ...          ...         ...</span></span>
-<span><span class="co">## GABRQ     -0.004987919 -0.002776015  0.000000000  0.00000000</span></span>
-<span><span class="co">## CLIC2     -0.000899236  0.000000000 -0.002090804  0.00000000</span></span>
-<span><span class="co">## EEF1A1P41 -0.000239274  0.000000000  0.000000000  0.00000000</span></span>
-<span><span class="co">## PCDH11Y   -0.001452754 -0.001119289 -0.000813786  0.00000000</span></span>
-<span><span class="co">## TMSB4Y     0.000000000 -0.000292628  0.000000000 -0.00585973</span></span></code></pre>
+<span><span class="co">##               p.value         FDR summary.logFC     logFC.2      logFC.3</span></span>
+<span><span class="co">##             &lt;numeric&gt;   &lt;numeric&gt;     &lt;numeric&gt;   &lt;numeric&gt;    &lt;numeric&gt;</span></span>
+<span><span class="co">## TPM1      5.14786e-85 1.13104e-80     1.5604602   -2.526001    1.5758556</span></span>
+<span><span class="co">## NEXN      9.79295e-23 1.07580e-18    -0.6131618   -1.221489    0.1960131</span></span>
+<span><span class="co">## KRT18     8.76435e-18 6.41872e-14     0.3717481    0.371748    0.5273134</span></span>
+<span><span class="co">## ACTA2     2.12218e-17 1.16566e-13     0.0923831   -0.546589    0.0954392</span></span>
+<span><span class="co">## ANKRD1    4.04560e-17 1.77772e-13     0.2718263   -1.504769    0.3379046</span></span>
+<span><span class="co">## ...               ...         ...           ...         ...          ...</span></span>
+<span><span class="co">## ABCD1               1           1             0 -0.00727795 -0.000768208</span></span>
+<span><span class="co">## CLIC2               1           1             0  0.00000000  0.000000000</span></span>
+<span><span class="co">## EEF1A1P41           1           1             0 -0.00408911  0.000000000</span></span>
+<span><span class="co">## PCDH11Y             1           1             0  0.00000000 -0.001357497</span></span>
+<span><span class="co">## TMSB4Y              1           1             0  0.00000000 -0.000286135</span></span>
+<span><span class="co">##                logFC.4      logFC.5     logFC.6     logFC.7</span></span>
+<span><span class="co">##              &lt;numeric&gt;    &lt;numeric&gt;   &lt;numeric&gt;   &lt;numeric&gt;</span></span>
+<span><span class="co">## TPM1         1.3627284    1.7967622   -1.873952    1.560460</span></span>
+<span><span class="co">## NEXN         0.1688780    0.1950033   -0.613162    0.205480</span></span>
+<span><span class="co">## KRT18        0.4117986    0.5686877   -0.729451    0.580191</span></span>
+<span><span class="co">## ACTA2        0.0949788    0.0923831   -1.156074    0.101023</span></span>
+<span><span class="co">## ANKRD1       0.3082924    0.3164633   -1.559440    0.271826</span></span>
+<span><span class="co">## ...                ...          ...         ...         ...</span></span>
+<span><span class="co">## ABCD1     -0.001191767 -0.002529505  0.00000000 -0.00339277</span></span>
+<span><span class="co">## CLIC2     -0.001037117 -0.002346766 -0.00617463  0.00000000</span></span>
+<span><span class="co">## EEF1A1P41 -0.000278101  0.000000000  0.00000000  0.00000000</span></span>
+<span><span class="co">## PCDH11Y   -0.001090408 -0.000844056  0.00000000  0.00000000</span></span>
+<span><span class="co">## TMSB4Y     0.000000000  0.000000000  0.00000000 -0.00672774</span></span></code></pre>
 <p>Even with count splitting, we identify several highly significant
 marker genes, both “by hand” and with the <code><a href="https://rdrr.io/pkg/scran/man/findMarkers.html" class="external-link">findMarkers()</a></code>
 function.</p>
@@ -368,7 +373,7 @@ function.</p>
 <div class="section level2">
 <h2 class="unnumbered" id="references">References<a class="anchor" aria-label="anchor" href="#references"></a>
 </h2>
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0">
 <div id="ref-elorbany2022single" class="csl-entry">
 Elorbany, Reem, Joshua M Popp, Katherine Rhodes, Benjamin J Strober,
 Kenneth Barr, Guanghao Qi, Yoav Gilad, and Alexis Battle. 2022.
@@ -382,9 +387,7 @@ Differentiation.”</span> <em>PLoS Genetics</em> 18 (1): e1009666.
 
   <div class="col-md-3 hidden-xs hidden-sm" id="pkgdown-sidebar">
 
-        <nav id="toc" data-toggle="toc"><h2 data-toc-skip>Contents</h2>
-    </nav>
-</div>
+      </div>
 
 </div>
 
@@ -397,16 +400,16 @@ Differentiation.”</span> <em>PLoS Genetics</em> 18 (1): e1009666.
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.0.7.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
       </footer>
 </div>
 
-  
 
 
-  
+
+
 
   </body>
 </html>

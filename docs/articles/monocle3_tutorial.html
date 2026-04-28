@@ -5,13 +5,13 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>monocle3_tutorial_comparison_final_draft • countsplit.tutorials</title>
+<title>Tutorial: count splitting with Monocle3 • countsplit.tutorials</title>
 <!-- jquery --><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script><!-- Bootstrap --><link href="https://cdnjs.cloudflare.com/ajax/libs/bootswatch/3.4.0/flatly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/js/bootstrap.min.js" integrity="sha256-nuL8/2cJ5NDSSwnKD8VqreErSWHtnEP9E7AySL+1ev4=" crossorigin="anonymous"></script><!-- bootstrap-toc --><link rel="stylesheet" href="../bootstrap-toc.css">
 <script src="../bootstrap-toc.js"></script><!-- Font Awesome icons --><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/all.min.css" integrity="sha256-mmgLkCYLUQbXn0B1SRqzHar6dCnv9oZFPEC1g1cwlkk=" crossorigin="anonymous">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.1/css/v4-shims.min.css" integrity="sha256-wZjR52fzng1pJHwx4aV2AO3yyTOXrcDW7jBpJtTwVxw=" crossorigin="anonymous">
 <!-- clipboard.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/2.0.6/clipboard.min.js" integrity="sha256-inc5kl9MA1hkeYUt+EC3BhlIgyp/2jDIyBLS6k3UxPI=" crossorigin="anonymous"></script><!-- headroom.js --><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/headroom.min.js" integrity="sha256-AsUX4SJE1+yuDu5+mAVzJbuYNPHj/WroHuZ8Ir/CkE0=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/headroom/0.11.0/jQuery.headroom.min.js" integrity="sha256-ZX/yNShbjqsohH1k95liqY9Gd8uOiE1S4vZc+9KQ1K4=" crossorigin="anonymous"></script><!-- pkgdown --><link href="../pkgdown.css" rel="stylesheet">
-<script src="../pkgdown.js"></script><meta property="og:title" content="monocle3_tutorial_comparison_final_draft">
+<script src="../pkgdown.js"></script><meta property="og:title" content="Tutorial: count splitting with Monocle3">
 <!-- mathjax --><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js" integrity="sha256-nvJJv9wWKEm88qvoQl9ekL2J+k/RWIsaSScxxlsrv8k=" crossorigin="anonymous"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/config/TeX-AMS-MML_HTMLorMML.js" integrity="sha256-84DKXVJXs0/F8OTMzX4UR909+jtl4G7SPypPavF+GfA=" crossorigin="anonymous"></script><!--[if lt IE 9]>
 <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
 <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
@@ -70,9 +70,8 @@
       </header><div class="row">
   <div class="col-md-9 contents">
     <div class="page-header toc-ignore">
-      <h1 data-toc-skip>monocle3_tutorial_comparison_final_draft</h1>
+      <h1 data-toc-skip>Tutorial: count splitting with Monocle3</h1>
             
-            <h4 data-toc-skip class="date">2026-02-11</h4>
       
 
       <div class="hidden name"><code>monocle3_tutorial.Rmd</code></div>
@@ -81,23 +80,23 @@
 
     
     
-<div class="section level3">
-<h3 id="tutorial-countsplitting-with-monocle3">Tutorial: countsplitting with Monocle3<a class="anchor" aria-label="anchor" href="#tutorial-countsplitting-with-monocle3"></a>
-</h3>
 <p>Before using this tutorial, we recommend that you read through our
 introductory tutorial to understand our method in a simple example with
 simulated data.</p>
+<div class="section level2">
+<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h2>
 <p>For this tutorial, we reproduce the Monocle3 vignette, but we apply
 count splitting. Throughout the tutorial, we see that we reach similar
-takeaways to those reached in the Monocle3 vignette, dloaespite the fact
-that we estimate pseudotime using only the training set.</p>
+takeaways to those in the Monocle3 vignette, despite the fact that we
+estimate pseudotime using only the training set.</p>
 </div>
 <div class="section level2">
 <h2 id="install-monocle3">Install Monocle3<a class="anchor" aria-label="anchor" href="#install-monocle3"></a>
 </h2>
 <p>If you don’t already have Monocle3, you will need to install it.
 Please visit this link for installation details. As Monocle3 is in Beta,
-there may be some trouble shooting involved.</p>
+there may be some troubleshooting involved.</p>
 <p>Next, you should load the package, along with others that we will use
 in this tutorial.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
@@ -120,11 +119,11 @@ in this tutorial.</p>
 We apply Poisson count splitting directly to the raw expression matrix.
 We then construct a cell_data_set object (used by the Monocle3 package)
 that contains only the training set counts. We also do the same with
-Negative Binomial count splitting by using the est_overdispersions()
+negative binomial count splitting by using the est_overdispersions()
 function which returns a vector containing estimates of the
 overdispersion parameter of each row of the expression matrix. For
-comparison reasons, we run the pipeline on the matrix without
-countsplit.</p>
+comparison reasons, we run the pipeline on the matrix without count
+splitting.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">overdisps</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/countsplit/man/est_overdispersions.html" class="external-link">est_overdispersions</a></span><span class="op">(</span><span class="va">expression_matrix</span>, min_cells <span class="op">=</span> <span class="fl">5</span>, n_genes <span class="op">=</span> <span class="cn">NULL</span>, verbosity <span class="op">=</span> <span class="fl">0</span><span class="op">)</span></span>
 <span></span>
@@ -149,7 +148,7 @@ a Poisson or Negative Binomial distribution.</p>
 <h2 id="preprocess-the-data">Preprocess the data<a class="anchor" aria-label="anchor" href="#preprocess-the-data"></a>
 </h2>
 <p>We now follow the preprocessing and pseudotime steps from the
-Monocle3 tutorial to come up with pseudotime estimates. Besides the
+Monocle3 tutorial to come up with pseudotime estimates. Except for the
 naive case, everything in this section uses the training set only.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cds_train.NB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/preprocess_cds.html" class="external-link">preprocess_cds</a></span><span class="op">(</span><span class="va">cds_train.NB</span>, num_dim <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
@@ -158,38 +157,49 @@ naive case, everything in this section uses the training set only.</p>
 <span>  alignment_group <span class="op">=</span> <span class="st">"batch"</span>, </span>
 <span>  residual_model_formula_str <span class="op">=</span> <span class="st">"~ bg.300.loading + bg.400.loading + bg.500.1.loading +    </span></span>
 <span><span class="st">      bg.500.2.loading + bg.r17.loading + bg.b01.loading + bg.b02.loading"</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span></span>
-<span></span>
-<span><span class="va">cds_train.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/preprocess_cds.html" class="external-link">preprocess_cds</a></span><span class="op">(</span><span class="va">cds_train.PO</span>, num_dim <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Aligning cells from different batches using Batchelor.</span></span>
+<span><span class="co">## Please remember to cite:</span></span>
+<span><span class="co">##   Haghverdi L, Lun ATL, Morgan MD, Marioni JC (2018). 'Batch effects in single-cell RNA-sequencing data are corrected by matching mutual nearest neighbors.' Nat. Biotechnol., 36(5), 421-427. doi: 10.1038/nbt.4091</span></span></code></pre>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cds_train.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/preprocess_cds.html" class="external-link">preprocess_cds</a></span><span class="op">(</span><span class="va">cds_train.PO</span>, num_dim <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
 <span><span class="va">cds_train.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/align_cds.html" class="external-link">align_cds</a></span><span class="op">(</span></span>
 <span>  <span class="va">cds_train.PO</span>, </span>
 <span>  alignment_group <span class="op">=</span> <span class="st">"batch"</span>, </span>
 <span>  residual_model_formula_str <span class="op">=</span> <span class="st">"~ bg.300.loading + bg.400.loading + bg.500.1.loading +    </span></span>
 <span><span class="st">      bg.500.2.loading + bg.r17.loading + bg.b01.loading + bg.b02.loading"</span></span>
-<span>  <span class="op">)</span></span>
-<span></span>
-<span></span>
-<span></span>
-<span><span class="va">cds.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/preprocess_cds.html" class="external-link">preprocess_cds</a></span><span class="op">(</span><span class="va">cds.naive</span>, num_dim <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Aligning cells from different batches using Batchelor.</span></span>
+<span><span class="co">## Please remember to cite:</span></span>
+<span><span class="co">##   Haghverdi L, Lun ATL, Morgan MD, Marioni JC (2018). 'Batch effects in single-cell RNA-sequencing data are corrected by matching mutual nearest neighbors.' Nat. Biotechnol., 36(5), 421-427. doi: 10.1038/nbt.4091</span></span></code></pre>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cds.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/preprocess_cds.html" class="external-link">preprocess_cds</a></span><span class="op">(</span><span class="va">cds.naive</span>, num_dim <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
 <span><span class="va">cds.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/align_cds.html" class="external-link">align_cds</a></span><span class="op">(</span></span>
 <span>  <span class="va">cds.naive</span>, </span>
 <span>  alignment_group <span class="op">=</span> <span class="st">"batch"</span>, </span>
 <span>  residual_model_formula_str <span class="op">=</span> <span class="st">"~ bg.300.loading + bg.400.loading + bg.500.1.loading +    </span></span>
 <span><span class="st">      bg.500.2.loading + bg.r17.loading + bg.b01.loading + bg.b02.loading"</span></span>
-<span>  <span class="op">)</span></span>
+<span>  <span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Aligning cells from different batches using Batchelor.</span></span>
+<span><span class="co">## Please remember to cite:</span></span>
+<span><span class="co">##   Haghverdi L, Lun ATL, Morgan MD, Marioni JC (2018). 'Batch effects in single-cell RNA-sequencing data are corrected by matching mutual nearest neighbors.' Nat. Biotechnol., 36(5), 421-427. doi: 10.1038/nbt.4091</span></span></code></pre>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cds_train.NB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/reduce_dimension.html" class="external-link">reduce_dimension</a></span><span class="op">(</span><span class="va">cds_train.NB</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## No preprocess_method specified, and aligned coordinates have been computed previously. Using preprocess_method = 'Aligned'</span></span></code></pre>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cds_train.NB.celltypeplot</span> <span class="op">&lt;-</span> <span class="va">cds_train.NB</span></span>
 <span></span>
-<span><span class="va">cds_train.NB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/reduce_dimension.html" class="external-link">reduce_dimension</a></span><span class="op">(</span><span class="va">cds_train.NB</span><span class="op">)</span></span>
-<span><span class="va">cds_train.NB.celltypeplot</span> <span class="op">&lt;-</span> <span class="va">cds_train.NB</span></span>
+<span></span>
+<span><span class="va">cds_train.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/reduce_dimension.html" class="external-link">reduce_dimension</a></span><span class="op">(</span><span class="va">cds_train.PO</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## No preprocess_method specified, and aligned coordinates have been computed previously. Using preprocess_method = 'Aligned'</span></span></code></pre>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cds_train.PO.celltypeplot</span> <span class="op">&lt;-</span> <span class="va">cds_train.PO</span></span>
 <span></span>
 <span></span>
-<span><span class="va">cds_train.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/reduce_dimension.html" class="external-link">reduce_dimension</a></span><span class="op">(</span><span class="va">cds_train.PO</span><span class="op">)</span></span>
-<span><span class="va">cds_train.PO.celltypeplot</span> <span class="op">&lt;-</span> <span class="va">cds_train.PO</span></span>
-<span></span>
-<span></span>
-<span><span class="va">cds.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/reduce_dimension.html" class="external-link">reduce_dimension</a></span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span></span>
-<span><span class="va">cds.naive.celltypeplot</span> <span class="op">&lt;-</span> <span class="va">cds.naive</span></span></code></pre></div>
+<span><span class="va">cds.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/reduce_dimension.html" class="external-link">reduce_dimension</a></span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## No preprocess_method specified, and aligned coordinates have been computed previously. Using preprocess_method = 'Aligned'</span></span></code></pre>
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">cds.naive.celltypeplot</span> <span class="op">&lt;-</span> <span class="va">cds.naive</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="estimate-pseudotime">Estimate pseudotime<a class="anchor" aria-label="anchor" href="#estimate-pseudotime"></a>
@@ -202,7 +212,7 @@ function to ensure that our graph is made up of a single connected
 trajectory. We use Louvain clustering, rather than the default Leiden
 clustering of cluster_cells, to avoid a recent error with the Monocle3
 package and the implementation of Leiden clustering.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cds_train.NB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/cluster_cells.html" class="external-link">cluster_cells</a></span><span class="op">(</span><span class="va">cds_train.NB</span>, cluster_method<span class="op">=</span><span class="st">"louvain"</span><span class="op">)</span></span>
 <span><span class="va">cds_train.NB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/learn_graph.html" class="external-link">learn_graph</a></span><span class="op">(</span><span class="va">cds_train.NB</span>, use_partition<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
 <span></span>
@@ -214,12 +224,12 @@ package and the implementation of Leiden clustering.</p>
 <span><span class="va">cds.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/learn_graph.html" class="external-link">learn_graph</a></span><span class="op">(</span><span class="va">cds.naive</span>, use_partition<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> </span></code></pre></div>
 <p>Once the graph is learned, Monocle3 computes pseudotime with the
 order_cells() function. This function simply projects the cells onto the
-principal graph to get a one dimensional representation. The only
+principal graph to get a one-dimensional representation. The only
 additional step is picking a root node in the graph that will correspond
 to 0 in pseudotime space. To pick a root node for pseudotime, we use the
 same method as in the Monocle3 vignette. We pick the cell from the first
 time bin that is closest to a graph vertex.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">get_earliest_principal_node</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">cds</span>, <span class="va">time_bin</span><span class="op">=</span><span class="st">"130-170"</span><span class="op">)</span><span class="op">{</span></span>
 <span>  <span class="va">cell_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/which.html" class="external-link">which</a></span><span class="op">(</span><span class="fu">colData</span><span class="op">(</span><span class="va">cds</span><span class="op">)</span><span class="op">[</span>, <span class="st">"embryo.time.bin"</span><span class="op">]</span> <span class="op">==</span> <span class="va">time_bin</span><span class="op">)</span></span>
 <span>  <span class="va">closest_vertex</span> <span class="op">&lt;-</span></span>
@@ -251,42 +261,368 @@ the test set counts for differential expression analysis.</p>
 <h2 id="by-hand">By hand<a class="anchor" aria-label="anchor" href="#by-hand"></a>
 </h2>
 <p>First, we carry out differential expression testing “by hand”. We fit
-a quasipoisson GLM of each test set gene onto the pseudotime computed
+a quasi-Poisson GLM of each test set gene onto the pseudotime computed
 from the training set. (We choose quasipoisson since this is the default
 family for the fit_models() function in Monocle3.) For computational
 efficiency, we only do this for the first 500 genes. We include the size
-factors estimated on the training as offsets in the regression.</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+factors estimated on the training set as offsets in the regression.</p>
+<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pseudotime.train.NB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/pseudotime.html" class="external-link">pseudotime</a></span><span class="op">(</span><span class="va">cds_train.NB</span><span class="op">)</span></span>
 <span><span class="va">sf.train.NB</span> <span class="op">&lt;-</span> <span class="fu">colData</span><span class="op">(</span><span class="va">cds_train.NB</span><span class="op">)</span><span class="op">$</span><span class="va">Size_Factor</span></span>
-<span><span class="va">results.NB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">Xtest.NB</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">500</span><span class="op">]</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">u</span><span class="op">~</span><span class="va">pseudotime.train.NB</span>, offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">sf.train.NB</span><span class="op">)</span>, family<span class="op">=</span><span class="st">"quasipoisson"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">results.NB</span>, n<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span>
-<span><span class="co">## WBGene00010957 WBGene00010958 WBGene00010959 WBGene00010960 WBGene00010961 </span></span>
+<span><span class="va">results.NB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">Xtest.NB</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">500</span><span class="op">]</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">u</span><span class="op">~</span><span class="va">pseudotime.train.NB</span>, offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">sf.train.NB</span><span class="op">)</span>, family<span class="op">=</span><span class="st">"quasipoisson"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span></code></pre>
+<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">results.NB</span>, n<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## WBGene00010957 WBGene00010958 WBGene00010959 WBGene00010960 WBGene00010961 </span></span>
 <span><span class="co">##    0.001580481    0.004838716    0.001743313    0.001837609    0.003232772 </span></span>
 <span><span class="co">## WBGene00000829 WBGene00010962 WBGene00010963 WBGene00010964 WBGene00010965 </span></span>
-<span><span class="co">##    0.001939553    0.001781305    0.002480378    0.001794021    0.001626192</span></span>
-<span></span>
-<span></span>
-<span><span class="va">pseudotime.train.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/pseudotime.html" class="external-link">pseudotime</a></span><span class="op">(</span><span class="va">cds_train.PO</span><span class="op">)</span></span>
+<span><span class="co">##    0.001939553    0.001781305    0.002480378    0.001794021    0.001626192</span></span></code></pre>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pseudotime.train.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/pseudotime.html" class="external-link">pseudotime</a></span><span class="op">(</span><span class="va">cds_train.PO</span><span class="op">)</span></span>
 <span><span class="va">sf.train.PO</span> <span class="op">&lt;-</span> <span class="fu">colData</span><span class="op">(</span><span class="va">cds_train.PO</span><span class="op">)</span><span class="op">$</span><span class="va">Size_Factor</span></span>
-<span><span class="va">results.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">Xtest.PO</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">500</span><span class="op">]</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">u</span><span class="op">~</span><span class="va">pseudotime.train.PO</span>, offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">sf.train.PO</span><span class="op">)</span>, family<span class="op">=</span><span class="st">"quasipoisson"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">results.PO</span>, n<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span>
-<span><span class="co">## WBGene00010957 WBGene00010958 WBGene00010959 WBGene00010960 WBGene00010961 </span></span>
+<span><span class="va">results.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">Xtest.PO</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">500</span><span class="op">]</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">u</span><span class="op">~</span><span class="va">pseudotime.train.PO</span>, offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">sf.train.PO</span><span class="op">)</span>, family<span class="op">=</span><span class="st">"quasipoisson"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span></code></pre>
+<div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">results.PO</span>, n<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## WBGene00010957 WBGene00010958 WBGene00010959 WBGene00010960 WBGene00010961 </span></span>
 <span><span class="co">##    0.001899834    0.006405022    0.002284292    0.002085469    0.004451402 </span></span>
 <span><span class="co">## WBGene00000829 WBGene00010962 WBGene00010963 WBGene00010964 WBGene00010965 </span></span>
-<span><span class="co">##    0.002568783    0.002076083    0.003449154    0.002275399    0.001918776</span></span>
-<span></span>
-<span></span>
-<span><span class="va">pseudotime.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/pseudotime.html" class="external-link">pseudotime</a></span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span></span>
+<span><span class="co">##    0.002568783    0.002076083    0.003449154    0.002275399    0.001918776</span></span></code></pre>
+<div class="sourceCode" id="cb27"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pseudotime.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/pseudotime.html" class="external-link">pseudotime</a></span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span></span>
 <span><span class="va">sf.naive</span> <span class="op">&lt;-</span> <span class="fu">colData</span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span><span class="op">$</span><span class="va">Size_Factor</span></span>
-<span><span class="va">results.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">cds.naive_matrix</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">500</span><span class="op">]</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">u</span><span class="op">~</span><span class="va">pseudotime.naive</span>, offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">sf.naive</span><span class="op">)</span>, family<span class="op">=</span><span class="st">"quasipoisson"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">results.naive</span>, n<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span>
-<span><span class="co">## WBGene00010957 WBGene00010958 WBGene00010959 WBGene00010960 WBGene00010961 </span></span>
+<span><span class="va">results.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/apply.html" class="external-link">apply</a></span><span class="op">(</span><span class="va">cds.naive_matrix</span><span class="op">[</span>,<span class="fl">1</span><span class="op">:</span><span class="fl">500</span><span class="op">]</span>, <span class="fl">2</span>, <span class="kw">function</span><span class="op">(</span><span class="va">u</span><span class="op">)</span> <span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/glm.html" class="external-link">glm</a></span><span class="op">(</span><span class="va">u</span><span class="op">~</span><span class="va">pseudotime.naive</span>, offset <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">sf.naive</span><span class="op">)</span>, family<span class="op">=</span><span class="st">"quasipoisson"</span><span class="op">)</span><span class="op">)</span><span class="op">$</span><span class="va">coefficients</span><span class="op">[</span><span class="fl">2</span>,<span class="fl">2</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span>
+<span><span class="co">## Warning: glm.fit: algorithm did not converge</span></span></code></pre>
+<div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">results.naive</span>, n<span class="op">=</span><span class="fl">10</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## WBGene00010957 WBGene00010958 WBGene00010959 WBGene00010960 WBGene00010961 </span></span>
 <span><span class="co">##    0.001898014    0.005468485    0.002002279    0.002127978    0.003731816 </span></span>
 <span><span class="co">## WBGene00000829 WBGene00010962 WBGene00010963 WBGene00010964 WBGene00010965 </span></span>
-<span><span class="co">##    0.002223243    0.002101282    0.002863294    0.002060656    0.001845555</span></span></code></pre></div>
+<span><span class="co">##    0.002223243    0.002101282    0.002863294    0.002060656    0.001845555</span></span></code></pre>
 <p>The results above show the differential expression p-value for each
-of the first 10 genes in the dataset.</p>
+of the first 10 of these 500 genes in the dataset.</p>
 </div>
 <div class="section level2">
 <h2 id="using-monocle3s-graph-test">Using Monocle3’s Graph Test<a class="anchor" aria-label="anchor" href="#using-monocle3s-graph-test"></a>
@@ -303,142 +639,166 @@ store the training set graph. To accomplish this, we make a copy of
 cds_train and only update the counts. This procedure is not applied to
 the naive dataset because there was no seperation of a train and test
 set.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cds_test.NB</span> <span class="op">&lt;-</span> <span class="va">cds_train.NB</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">cds_test.NB</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">Xtest.NB</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">cds_test.PO</span> <span class="op">&lt;-</span> <span class="va">cds_train.PO</span> </span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/dge.html" class="external-link">counts</a></span><span class="op">(</span><span class="va">cds_test.PO</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">Xtest.PO</span><span class="op">)</span></span></code></pre></div>
-<p>We now run the graph_test function, which is the preferred Monocle3
+<p>We now run the graph_test() function, which is the preferred Monocle3
 methodology for finding genes that vary across pseudotime.</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ciliated_cds_pr_test_res.NB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/graph_test.html" class="external-link">graph_test</a></span><span class="op">(</span><span class="va">cds_test.NB</span>, neighbor_graph<span class="op">=</span><span class="st">"principal_graph"</span>, cores<span class="op">=</span><span class="fl">4</span><span class="op">)</span> </span>
-<span><span class="va">pr_deg_ids.NB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/row.names.html" class="external-link">row.names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">ciliated_cds_pr_test_res.NB</span>, <span class="va">q_value</span> <span class="op">&lt;</span> <span class="fl">0.0005</span><span class="op">)</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ciliated_cds_pr_test_res.NB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/graph_test.html" class="external-link">graph_test</a></span><span class="op">(</span><span class="va">cds_test.NB</span>, neighbor_graph<span class="op">=</span><span class="st">"principal_graph"</span>, cores<span class="op">=</span><span class="fl">4</span><span class="op">)</span> </span></code></pre></div>
+<pre><code><span><span class="co">## Warning in pbmcapply::pbmclapply(row.names(exprs_mat), FUN = function(x, : mc.cores &gt; 1 is not supported on Windows due to limitation of mc*apply() functions.</span></span>
+<span><span class="co">##   mc.core is set to 1.</span></span></code></pre>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pr_deg_ids.NB</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/row.names.html" class="external-link">row.names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">ciliated_cds_pr_test_res.NB</span>, <span class="va">q_value</span> <span class="op">&lt;</span> <span class="fl">0.0005</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">ciliated_cds_pr_test_res.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/graph_test.html" class="external-link">graph_test</a></span><span class="op">(</span><span class="va">cds_test.PO</span>, neighbor_graph<span class="op">=</span><span class="st">"principal_graph"</span>, cores<span class="op">=</span><span class="fl">4</span><span class="op">)</span> </span>
-<span><span class="va">pr_deg_ids.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/row.names.html" class="external-link">row.names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">ciliated_cds_pr_test_res.PO</span>, <span class="va">q_value</span> <span class="op">&lt;</span> <span class="fl">0.0005</span><span class="op">)</span><span class="op">)</span> </span>
+<span><span class="va">ciliated_cds_pr_test_res.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/graph_test.html" class="external-link">graph_test</a></span><span class="op">(</span><span class="va">cds_test.PO</span>, neighbor_graph<span class="op">=</span><span class="st">"principal_graph"</span>, cores<span class="op">=</span><span class="fl">4</span><span class="op">)</span> </span></code></pre></div>
+<pre><code><span><span class="co">## Warning in pbmcapply::pbmclapply(row.names(exprs_mat), FUN = function(x, : mc.cores &gt; 1 is not supported on Windows due to limitation of mc*apply() functions.</span></span>
+<span><span class="co">##   mc.core is set to 1.</span></span></code></pre>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pr_deg_ids.PO</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/row.names.html" class="external-link">row.names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">ciliated_cds_pr_test_res.PO</span>, <span class="va">q_value</span> <span class="op">&lt;</span> <span class="fl">0.0005</span><span class="op">)</span><span class="op">)</span> </span>
 <span></span>
-<span><span class="va">ciliated_cds_pr_test_res.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/graph_test.html" class="external-link">graph_test</a></span><span class="op">(</span><span class="va">cds.naive</span>, neighbor_graph<span class="op">=</span><span class="st">"principal_graph"</span>, cores<span class="op">=</span><span class="fl">4</span><span class="op">)</span> </span>
-<span><span class="va">pr_deg_ids.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/row.names.html" class="external-link">row.names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">ciliated_cds_pr_test_res.naive</span>, <span class="va">q_value</span> <span class="op">&lt;</span> <span class="fl">0.0005</span><span class="op">)</span><span class="op">)</span> </span></code></pre></div>
+<span><span class="va">ciliated_cds_pr_test_res.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/graph_test.html" class="external-link">graph_test</a></span><span class="op">(</span><span class="va">cds.naive</span>, neighbor_graph<span class="op">=</span><span class="st">"principal_graph"</span>, cores<span class="op">=</span><span class="fl">4</span><span class="op">)</span> </span></code></pre></div>
+<pre><code><span><span class="co">## Warning in pbmcapply::pbmclapply(row.names(exprs_mat), FUN = function(x, : mc.cores &gt; 1 is not supported on Windows due to limitation of mc*apply() functions.</span></span>
+<span><span class="co">##   mc.core is set to 1.</span></span></code></pre>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pr_deg_ids.naive</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/row.names.html" class="external-link">row.names</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">ciliated_cds_pr_test_res.naive</span>, <span class="va">q_value</span> <span class="op">&lt;</span> <span class="fl">0.0005</span><span class="op">)</span><span class="op">)</span> </span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="plots-and-visualizations">Plots and visualizations<a class="anchor" aria-label="anchor" href="#plots-and-visualizations"></a>
 </h2>
-<p>The plots below shows that the cells cluster nicely by their cell
-type in reduced dimensions. This suggests that neither Poisson nor
-Negative Binomial count splitting has destroyed the signal in the
-data.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<p>The plots below show that the cells cluster nicely by their cell type
+in reduced dimensions. This suggests that neither Poisson nor Negative
+Binomial count splitting has destroyed the signal in the data.</p>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds_train.NB.celltypeplot</span>, </span>
 <span>           color_cells_by <span class="op">=</span> <span class="st">"cell.type"</span>,</span>
 <span>           label_groups_by_cluster<span class="op">=</span><span class="cn">FALSE</span>, </span>
 <span>           label_cell_groups<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>           graph_label_size<span class="op">=</span><span class="fl">1.5</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds_train.PO.celltypeplot</span>, </span>
+<pre><code><span><span class="co">## No trajectory to plot. Has learn_graph() been called yet?</span></span></code></pre>
+<pre><code><span><span class="co">## Warning: The `size` argument of `element_line()` is deprecated as of ggplot2 3.4.0.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use the `linewidth` argument instead.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">monocle3</span> package.</span></span>
+<span><span class="co">##   Please report the issue to the authors.</span></span>
+<span><span class="co">## <span style="color: #555555;">This warning is displayed once per session.</span></span></span>
+<span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">## <span style="color: #555555;">generated.</span></span></span></code></pre>
+<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-10-1.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds_train.PO.celltypeplot</span>, </span>
 <span>           color_cells_by <span class="op">=</span> <span class="st">"cell.type"</span>,</span>
 <span>           label_groups_by_cluster<span class="op">=</span><span class="cn">FALSE</span>, </span>
 <span>           label_cell_groups<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>           graph_label_size<span class="op">=</span><span class="fl">1.5</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-11-2.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds.naive.celltypeplot</span>, </span>
+<pre><code><span><span class="co">## No trajectory to plot. Has learn_graph() been called yet?</span></span></code></pre>
+<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-10-2.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds.naive.celltypeplot</span>, </span>
 <span>           color_cells_by <span class="op">=</span> <span class="st">"cell.type"</span>,</span>
 <span>           label_groups_by_cluster<span class="op">=</span><span class="cn">FALSE</span>, </span>
 <span>           label_cell_groups<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>           graph_label_size<span class="op">=</span><span class="fl">1.5</span><span class="op">)</span></span></code></pre></div>
-<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-11-3.png" class="r-plt" alt="" width="700"></p>
+<pre><code><span><span class="co">## No trajectory to plot. Has learn_graph() been called yet?</span></span></code></pre>
+<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-10-3.png" class="r-plt" alt="" width="700"></p>
 <p>We can also plot our learned graph with cells colored by
 pseudotime.</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds_train.NB</span>,</span>
 <span>           color_cells_by <span class="op">=</span> <span class="st">"pseudotime"</span>,</span>
 <span>           label_cell_groups<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>           label_leaves<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>           label_branch_points<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>           graph_label_size<span class="op">=</span><span class="fl">1.5</span><span class="op">)</span></span></code></pre></div>
-<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-12-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds_train.PO</span>,</span>
+<pre><code><span><span class="co">## Warning: `aes_string()` was deprecated in ggplot2 3.0.0.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use tidy evaluation idioms with `aes()`.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> See also `vignette("ggplot2-in-packages")` for more information.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">monocle3</span> package.</span></span>
+<span><span class="co">##   Please report the issue to the authors.</span></span>
+<span><span class="co">## <span style="color: #555555;">This warning is displayed once per session.</span></span></span>
+<span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">## <span style="color: #555555;">generated.</span></span></span></code></pre>
+<pre><code><span><span class="co">## Warning: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> Please use `linewidth` instead.</span></span>
+<span><span class="co">## <span style="color: #00BBBB;">ℹ</span> The deprecated feature was likely used in the <span style="color: #0000BB;">monocle3</span> package.</span></span>
+<span><span class="co">##   Please report the issue to the authors.</span></span>
+<span><span class="co">## <span style="color: #555555;">This warning is displayed once per session.</span></span></span>
+<span><span class="co">## <span style="color: #555555;">Call `lifecycle::last_lifecycle_warnings()` to see where this warning was</span></span></span>
+<span><span class="co">## <span style="color: #555555;">generated.</span></span></span></code></pre>
+<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-11-1.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds_train.PO</span>,</span>
 <span>           color_cells_by <span class="op">=</span> <span class="st">"pseudotime"</span>,</span>
 <span>           label_cell_groups<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>           label_leaves<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>           label_branch_points<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>           graph_label_size<span class="op">=</span><span class="fl">1.5</span><span class="op">)</span></span></code></pre></div>
-<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-12-2.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds.naive</span>,</span>
+<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-11-2.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds.naive</span>,</span>
 <span>           color_cells_by <span class="op">=</span> <span class="st">"pseudotime"</span>,</span>
 <span>           label_cell_groups<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>           label_leaves<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>           label_branch_points<span class="op">=</span><span class="cn">FALSE</span>,</span>
 <span>           graph_label_size<span class="op">=</span><span class="fl">1.5</span><span class="op">)</span></span></code></pre></div>
-<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-12-3.png" class="r-plt" alt="" width="700"></p>
+<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-11-3.png" class="r-plt" alt="" width="700"></p>
 <p>Here are a couple of interesting genes that score as highly
 significant according to graph_test(), both in our analysis and in the
 analysis in the Monocle3 vignette. We can see that the expression levels
-of these genes do vary a lot in pseudotime space (these genes are highly
-expressed in very specific regions of the graph).</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+of these genes vary substantially across pseudotime space (these genes
+are highly expressed in very specific regions of the graph).</p>
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds_test.NB</span>, genes<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hlh-4"</span>, <span class="st">"gcy-8"</span>, <span class="st">"dac-1"</span>, <span class="st">"oig-8"</span><span class="op">)</span>, </span>
 <span>          show_trajectory_graph<span class="op">=</span><span class="cn">FALSE</span>, </span>
 <span>           label_cell_groups<span class="op">=</span><span class="cn">FALSE</span>, </span>
 <span>           label_leaves<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> </span></code></pre></div>
-<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds_test.PO</span>, genes<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hlh-4"</span>, <span class="st">"gcy-8"</span>, <span class="st">"dac-1"</span>, <span class="st">"oig-8"</span><span class="op">)</span>, </span>
+<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-12-1.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds_test.PO</span>, genes<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hlh-4"</span>, <span class="st">"gcy-8"</span>, <span class="st">"dac-1"</span>, <span class="st">"oig-8"</span><span class="op">)</span>, </span>
 <span>          show_trajectory_graph<span class="op">=</span><span class="cn">FALSE</span>, </span>
 <span>           label_cell_groups<span class="op">=</span><span class="cn">FALSE</span>, </span>
 <span>           label_leaves<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> </span></code></pre></div>
-<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-13-2.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds.naive</span>, genes<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hlh-4"</span>, <span class="st">"gcy-8"</span>, <span class="st">"dac-1"</span>, <span class="st">"oig-8"</span><span class="op">)</span>, </span>
+<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-12-2.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_cells.html" class="external-link">plot_cells</a></span><span class="op">(</span><span class="va">cds.naive</span>, genes<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"hlh-4"</span>, <span class="st">"gcy-8"</span>, <span class="st">"dac-1"</span>, <span class="st">"oig-8"</span><span class="op">)</span>, </span>
 <span>          show_trajectory_graph<span class="op">=</span><span class="cn">FALSE</span>, </span>
 <span>           label_cell_groups<span class="op">=</span><span class="cn">FALSE</span>, </span>
 <span>           label_leaves<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> </span></code></pre></div>
-<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-13-3.png" class="r-plt" alt="" width="700"></p>
+<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-12-3.png" class="r-plt" alt="" width="700"></p>
 <p>We can also select specific genes and plot their expression across
 pseudotime. As in the Monocle3 vignette, we see that all three of these
-genes get “activated” midway through the trajectory, but dac-1 is
-activated slightly before the others.</p>
-<div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
+genes get activated midway through the trajectory, with dac-1 activating
+slightly earlier.</p>
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">genes</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gcy-8"</span>, <span class="st">"dac-1"</span>, <span class="st">"oig-8"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># NB test</span></span>
 <span><span class="va">AFD_lineage_cds.NB.test</span> <span class="op">&lt;-</span> <span class="va">cds_test.NB</span><span class="op">[</span><span class="fu">rowData</span><span class="op">(</span><span class="va">cds_test.NB</span><span class="op">)</span><span class="op">$</span><span class="va">gene_short_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">genes</span>, </span>
 <span>                       <span class="fu">colData</span><span class="op">(</span><span class="va">cds_test.NB</span><span class="op">)</span><span class="op">$</span><span class="va">cell.type</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AFD"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_genes_in_pseudotime.html" class="external-link">plot_genes_in_pseudotime</a></span><span class="op">(</span><span class="va">AFD_lineage_cds.NB.test</span>, color_cells_by<span class="op">=</span><span class="st">"embryo.time.bin"</span>,min_expr<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Negative Binomial"</span><span class="op">)</span> </span></code></pre></div>
-<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-14-1.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span></span>
-<span><span class="co"># PO test</span></span>
+<pre><code><span><span class="co">## Warning: the 'subbars' function has moved to the reformulas package. Please update your imports, or ask an upstream package maintainer to do so.</span></span>
+<span><span class="co">## <span style="color: #555555;">This warning is displayed once per session.</span></span></span></code></pre>
+<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-13-1.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># PO test</span></span>
 <span><span class="va">AFD_lineage_cds.PO.test</span> <span class="op">&lt;-</span> <span class="va">cds_test.PO</span><span class="op">[</span><span class="fu">rowData</span><span class="op">(</span><span class="va">cds_test.PO</span><span class="op">)</span><span class="op">$</span><span class="va">gene_short_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">genes</span>, </span>
 <span>                       <span class="fu">colData</span><span class="op">(</span><span class="va">cds_test.PO</span><span class="op">)</span><span class="op">$</span><span class="va">cell.type</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AFD"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_genes_in_pseudotime.html" class="external-link">plot_genes_in_pseudotime</a></span><span class="op">(</span><span class="va">AFD_lineage_cds.PO.test</span>, color_cells_by<span class="op">=</span><span class="st">"embryo.time.bin"</span>,min_expr<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Poisson"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-14-2.png" class="r-plt" alt="" width="700"></p>
-<div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span></span>
-<span><span class="co"># naive</span></span>
+<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-13-2.png" class="r-plt" alt="" width="700"></p>
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># naive</span></span>
 <span><span class="va">AFD_lineage_cds.naive</span> <span class="op">&lt;-</span> <span class="va">cds.naive</span><span class="op">[</span><span class="fu">rowData</span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span><span class="op">$</span><span class="va">gene_short_name</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="va">genes</span>, </span>
 <span>                       <span class="fu">colData</span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span><span class="op">$</span><span class="va">cell.type</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"AFD"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/monocle3/man/plot_genes_in_pseudotime.html" class="external-link">plot_genes_in_pseudotime</a></span><span class="op">(</span><span class="va">AFD_lineage_cds.naive</span>, color_cells_by<span class="op">=</span><span class="st">"embryo.time.bin"</span>,min_expr<span class="op">=</span><span class="fl">0.5</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Naive"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-14-3.png" class="r-plt" alt="" width="700"></p>
+<p><img src="monocle3_tutorial_files/figure-html/unnamed-chunk-13-3.png" class="r-plt" alt="" width="700"></p>
 <p>The analysis in this tutorial identifies differentially expressed
-genes without double dipping in the data, and thus improves upon the
-analysis in the Monocle3 vignette.</p>
+genes without double dipping in the data, and and thus avoids double
+dipping in the data, providing a more statistically principled
+alternative to the Monocle3 vignette analysis.</p>
 <p>To further confirm the signal has been preserved, we calculate the
 pseudotime correlations between the Naive and Negative Binomial methods
 and the Naive and Poisson methods. This was calculated over ten trials
@@ -448,7 +808,7 @@ pseudotime correlations were greater than that of the Naive and Negative
 Binomial pseudotime correlations. This was expected as Poisson
 countsplit preserves the signal slightly more effectively than Negative
 Binomial countsplit.</p>
-<div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">#load("pseudotime_correlation_distributions")</span></span>
 <span></span>
 <span><span class="co">#ggplot(df, aes(x = eps, y = value, fill = model)) +</span></span>
@@ -462,24 +822,24 @@ Binomial countsplit.</p>
 <p>We also calculate the correlations of specific gene expressions
 across the various methods to confirm that the cells highlighted in one
 UMAP correlate to the highlighted cells in the others.</p>
-<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">hlh</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span><span class="op">[</span><span class="fu">rowData</span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span><span class="op">$</span><span class="va">gene_short_name</span> <span class="op">==</span> <span class="st">"hlh-4"</span><span class="op">]</span></span>
 <span><span class="va">gcy</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span><span class="op">[</span><span class="fu">rowData</span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span><span class="op">$</span><span class="va">gene_short_name</span> <span class="op">==</span> <span class="st">"gcy-8"</span><span class="op">]</span></span>
 <span><span class="va">dac</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span><span class="op">[</span><span class="fu">rowData</span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span><span class="op">$</span><span class="va">gene_short_name</span> <span class="op">==</span> <span class="st">"dac-1"</span><span class="op">]</span></span>
 <span><span class="va">oig</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span><span class="op">[</span><span class="fu">rowData</span><span class="op">(</span><span class="va">cds.naive</span><span class="op">)</span><span class="op">$</span><span class="va">gene_short_name</span> <span class="op">==</span> <span class="st">"oig-8"</span><span class="op">]</span></span>
 <span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">cds.naive_matrix</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span>, <span class="va">Xtest.NB</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">## [1] 0.6716902</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">cds.naive_matrix</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span>, <span class="va">Xtest.PO</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">## [1] 0.943178</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">cds.naive_matrix</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span>, <span class="va">Xtrain.NB</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">## [1] 0.7456397</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">cds.naive_matrix</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span>, <span class="va">Xtrain.PO</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">## [1] 0.9372455</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">cds.naive_matrix</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span>, <span class="va">Xtest.NB</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 0.6716902</span></span></code></pre>
+<div class="sourceCode" id="cb61"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">cds.naive_matrix</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span>, <span class="va">Xtest.PO</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 0.943178</span></span></code></pre>
+<div class="sourceCode" id="cb63"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">cds.naive_matrix</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span>, <span class="va">Xtrain.NB</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 0.7456397</span></span></code></pre>
+<div class="sourceCode" id="cb65"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/stats/cor.html" class="external-link">cor</a></span><span class="op">(</span><span class="va">cds.naive_matrix</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span>, <span class="va">Xtrain.PO</span><span class="op">[</span>,<span class="va">gcy</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<pre><code><span><span class="co">## [1] 0.9372455</span></span></code></pre>
 </div>
   </div>
 

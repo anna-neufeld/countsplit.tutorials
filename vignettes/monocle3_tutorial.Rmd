@@ -1,24 +1,17 @@
 ---
-title: "Tutorial: countsplitting with Monocle3" 
-output: rmarkdown::html_vignette
-bibliography: latent.bib
-vignette: >
-  %\VignetteIndexEntry{Tutorial: countsplitting with Monocle3}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+title: "Tutorial: count splitting with Monocle3"
+output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, message=FALSE, warning=FALSE)
-```
+Before using this tutorial, we recommend that you read through our introductory tutorial to understand our method in a simple example with simulated data.
 
-Before using this tutorial, we recommend that you read through our [introductory tutorial](https://anna-neufeld.github.io/countsplit/articles/countsplit_tutorial.html) to understand our method in a simple example with simulated data. 
+# Overview
 
-For this tutorial, we reproduce the Monocle3 [vignette](https://cole-trapnell-lab.github.io/monocle3/docs/trajectories/), but we apply count splitting. Throughout the tutorial, we see that we reach similar takeaways to those reached in the Monocle3 vignette, despite the fact that we estimate pseudotime using only the training set. 
+For this tutorial, we reproduce the Monocle3 vignette, but we apply count splitting. Throughout the tutorial, we see that we reach similar takeaways to those in the Monocle3 vignette, despite the fact that we estimate pseudotime using only the training set.
 
 # Install Monocle3
 
-If you don't already have `Monocle3`, you will need to install it. Please visit [this link](https://cole-trapnell-lab.github.io/monocle3/docs/installation/) for installation details. As `Monocle3` is in Beta, there may be some trouble shooting involved. 
+If you don’t already have Monocle3, you will need to install it. Please visit this link for installation details. As Monocle3 is in Beta, there may be some troubleshooting involved.
 
 Next, you should load the package, along with others that we will use in this tutorial.
 
@@ -26,11 +19,14 @@ Next, you should load the package, along with others that we will use in this tu
 library(monocle3)
 library(tidyverse)
 library(countsplit)
+library(Matrix)
+library(sctransform)
+library(dplyr)
 ```
 
 # Load the data and create a cell_data_set
 
-We load the same data that is used in the Monocle3 vignette. 
+We load the same data that is used in the Monocle3 vignette.
 
 ```{r}
 expression_matrix <- readRDS(url("https://depts.washington.edu:/trapnell-lab/software/monocle3/celegans/data/packer_embryo_expression.rds"))
@@ -38,64 +34,96 @@ cell_metadata <- readRDS(url("https://depts.washington.edu:/trapnell-lab/softwar
 gene_annotation <- readRDS(url("https://depts.washington.edu:/trapnell-lab/software/monocle3/celegans/data/packer_embryo_rowData.rds"))
 ```
 
-We now deviate from the Monocle3 vignette to apply count splitting. We apply Poisson count splitting directly to the raw expression matrix. We then construct a `cell_data_set` object (used by the Monocle3 package) that contains only the training set counts. 
+We now deviate from the Monocle3 vignette to apply count splitting. We apply Poisson count splitting directly to the raw expression matrix. We then construct a cell_data_set object (used by the Monocle3 package) that contains only the training set counts. We also do the same with negative binomial count splitting by using the est_overdispersions() function which returns a vector containing estimates of the overdispersion parameter of each row of the expression matrix. For comparison reasons, we run the pipeline on the matrix without count splitting. 
 
-```{r}
-epsilon=0.5
-set.seed(1)
 
-#Xtrain <-apply(expression_matrix,2,function(u) rbinom(n=length(u), size=u, p=epsilon))
-#Xtest <- expression_matrix-Xtrain
+```{r, message=FALSE, warning=FALSE, results='hide'}
+overdisps <- est_overdispersions(expression_matrix, min_cells = 5, n_genes = NULL, verbosity = 0)
 
-split.pcs <- countsplit(expression_matrix)
-Xtrain <- split.pcs[[1]]
-Xtest <- split.pcs[[2]]
-cds_train <- new_cell_data_set(
-  Xtrain,
-  cell_metadata = cell_metadata,
-  gene_metadata = gene_annotation
-)
+split.NB <- countsplit(t(expression_matrix), overdisps = overdisps)
+Xtrain.NB <- split.NB[[1]]
+Xtest.NB <- split.NB[[2]]
+cds_train.NB <- new_cell_data_set(t(Xtrain.NB), cell_metadata = cell_metadata, gene_metadata = gene_annotation)
+
+
+split.PO <- countsplit(t(expression_matrix))
+Xtrain.PO <- split.PO[[1]]
+Xtest.PO <- split.PO[[2]]
+cds_train.PO <- new_cell_data_set(t(Xtrain.PO), cell_metadata = cell_metadata, gene_metadata = gene_annotation)
+
+cds.naive <- new_cell_data_set(expression_matrix, cell_metadata = cell_metadata, gene_metadata = gene_annotation)
+cds_counts <- counts(cds.naive)
+cds.naive_matrix <- t(as.matrix(cds_counts))
+
+
 ```
 
-This pipeline assumes that the data are reasonably close to following a Poisson distribution. In a separate tutorial, we will consider negative binomial count splitting.
-
+This pipeline assumes that the data are reasonably close to following a Poisson or Negative Binomial distribution. 
 
 # Preprocess the data
 
-We now follow the preprocessing and pseudotime steps from the Monocle3 tutorial to come up with pseudotime estimates. Everything in this section uses the training set only. 
+We now follow the preprocessing and pseudotime steps from the Monocle3 tutorial to come up with pseudotime estimates. Except for the naive case, everything in this section uses the training set only.
 
 ```{r}
-cds_train <- preprocess_cds(cds_train, num_dim = 50)
-cds_train <- align_cds(
-  cds_train, 
+cds_train.NB <- preprocess_cds(cds_train.NB, num_dim = 50)
+cds_train.NB <- align_cds(
+  cds_train.NB, 
   alignment_group = "batch", 
   residual_model_formula_str = "~ bg.300.loading + bg.400.loading + bg.500.1.loading +    
       bg.500.2.loading + bg.r17.loading + bg.b01.loading + bg.b02.loading"
   )
+
+
+
+cds_train.PO <- preprocess_cds(cds_train.PO, num_dim = 50)
+cds_train.PO <- align_cds(
+  cds_train.PO, 
+  alignment_group = "batch", 
+  residual_model_formula_str = "~ bg.300.loading + bg.400.loading + bg.500.1.loading +    
+      bg.500.2.loading + bg.r17.loading + bg.b01.loading + bg.b02.loading"
+  )
+
+
+
+cds.naive <- preprocess_cds(cds.naive, num_dim = 50)
+cds.naive <- align_cds(
+  cds.naive, 
+  alignment_group = "batch", 
+  residual_model_formula_str = "~ bg.300.loading + bg.400.loading + bg.500.1.loading +    
+      bg.500.2.loading + bg.r17.loading + bg.b01.loading + bg.b02.loading"
+  )
+
+cds_train.NB <- reduce_dimension(cds_train.NB)
+cds_train.NB.celltypeplot <- cds_train.NB
+
+
+cds_train.PO <- reduce_dimension(cds_train.PO)
+cds_train.PO.celltypeplot <- cds_train.PO
+
+
+cds.naive <- reduce_dimension(cds.naive)
+cds.naive.celltypeplot <- cds.naive
 ```
 
-The plot below shows that the cells cluster nicely by their cell type in reduced dimensions. This suggests that count splitting the data has not destroyed the signal in the data. 
+# Estimate pseudotime
 
-```{r}
-cds_train <- reduce_dimension(cds_train)
-plot_cells(cds_train, 
-           color_cells_by = "cell.type",
-           label_groups_by_cluster=FALSE, 
-           label_cell_groups=FALSE,
-           graph_label_size=1.5
-)
-```
-
-# Estimate pseudotime 
-
-In this section, we use the training dataset to learn the graph that will be used to estimate pseudotime. For simplicity in this tutorial, we would like to only have one pseudotime trajectory with one root node. Thus, we add the `use_partition=FALSE` argument to the `learn_graph` function to ensure that our graph is made up of a single connected trajectory. We use Louvain clustering, rather than the default Leiden clustering of ``cluster_cells``, to avoid a recent error with the Monocle3 package and the implementation of Leiden clustering.
+In this section, we use the training dataset to learn the graph that will be used to estimate pseudotime. For simplicity in this tutorial, we would like to only have one pseudotime trajectory with one root node. Thus, we add the use_partition=FALSE argument to the learn_graph function to ensure that our graph is made up of a single connected trajectory. We use Louvain clustering, rather than the default Leiden clustering of cluster_cells, to avoid a recent error with the Monocle3 package and the implementation of Leiden clustering.
 
 ```{r, results='hide'}
-cds_train <- cluster_cells(cds_train, cluster_method="louvain")
-cds_train <- learn_graph(cds_train, use_partition=FALSE)
+cds_train.NB <- cluster_cells(cds_train.NB, cluster_method="louvain")
+cds_train.NB <- learn_graph(cds_train.NB, use_partition=FALSE)
+
+
+cds_train.PO <- cluster_cells(cds_train.PO, cluster_method="louvain")
+cds_train.PO <- learn_graph(cds_train.PO, use_partition=FALSE)
+
+cds.naive <- cluster_cells(cds.naive, cluster_method="louvain") 
+cds.naive <- learn_graph(cds.naive, use_partition=FALSE) 
 ```
 
-Once the graph is learned, Monocle3 computes pseudotime with the `order_cells()` function. This function simply projects the cells onto the principal graph to get a one dimensional representation. The only additional step is picking a root node in the graph that will correspond to `0` in pseudotime space. To pick a root node for pseudotime, we use the same method as in the Monocle3 [vignette](https://cole-trapnell-lab.github.io/monocle3/docs/trajectories/). We pick the cell from the first time bin that is closest to a graph vertex.
+
+Once the graph is learned, Monocle3 computes pseudotime with the order_cells() function. This function simply projects the cells onto the principal graph to get a one-dimensional representation. The only additional step is picking a root node in the graph that will correspond to 0 in pseudotime space. To pick a root node for pseudotime, we use the same method as in the Monocle3 vignette. We pick the cell from the first time bin that is closest to a graph vertex.
+
 
 ```{r}
 get_earliest_principal_node <- function(cds, time_bin="130-170"){
@@ -108,13 +136,125 @@ get_earliest_principal_node <- function(cds, time_bin="130-170"){
   (which.max(table(closest_vertex[cell_ids,]))))]
   root_pr_nodes
 }
-cds_train <- order_cells(cds_train, root_pr_nodes=get_earliest_principal_node(cds_train))
+
+
+cds_train.NB <- order_cells(cds_train.NB, root_pr_nodes=get_earliest_principal_node(cds_train.NB))
+
+cds_train.PO <- order_cells(cds_train.PO, root_pr_nodes=get_earliest_principal_node(cds_train.PO))
+
+cds.naive <- order_cells(cds.naive, root_pr_nodes=get_earliest_principal_node(cds.naive))
+
+
 ```
 
-We now have estimated pseudotime, and we can plot our learned graph with cells colored by pseudotime. 
+# Finding genes that are differentially expressed across pseudotime
+
+Now that we have estimated pseudotime using the training set, we are ready to study differential expression along pseudotime. In this section, we rely on the pseudotime from the training set but we rely on the test set counts for differential expression analysis.
+
+# By hand
+
+First, we carry out differential expression testing “by hand”. We fit a quasi-Poisson GLM of each test set gene onto the pseudotime computed from the training set. (We choose quasipoisson since this is the default family for the fit_models() function in Monocle3.) For computational efficiency, we only do this for the first 500 genes. We include the size factors estimated on the training set as offsets in the regression.
+
 
 ```{r}
-plot_cells(cds_train,
+pseudotime.train.NB <- pseudotime(cds_train.NB)
+sf.train.NB <- colData(cds_train.NB)$Size_Factor
+results.NB <- apply(Xtest.NB[,1:500], 2, function(u) summary(glm(u~pseudotime.train.NB, offset = log(sf.train.NB), family="quasipoisson"))$coefficients[2,2])
+head(results.NB, n=10)
+
+
+pseudotime.train.PO <- pseudotime(cds_train.PO)
+sf.train.PO <- colData(cds_train.PO)$Size_Factor
+results.PO <- apply(Xtest.PO[,1:500], 2, function(u) summary(glm(u~pseudotime.train.PO, offset = log(sf.train.PO), family="quasipoisson"))$coefficients[2,2])
+head(results.PO, n=10)
+
+
+pseudotime.naive <- pseudotime(cds.naive)
+sf.naive <- colData(cds.naive)$Size_Factor
+results.naive <- apply(cds.naive_matrix[,1:500], 2, function(u) summary(glm(u~pseudotime.naive, offset = log(sf.naive), family="quasipoisson"))$coefficients[2,2])
+head(results.naive, n=10)
+```
+
+
+The results above show the differential expression p-value for each of the first 10 of these 500 genes in the dataset.
+
+# Using Monocle3’s Graph Test
+
+This next section follows the “finding genes that change as a function of pseudotime” section of the Monocle3 vignette. The differential expression testing method recommended in the Monocle3 tutorial is graph_test(), which uses Moran’s I statistics to test if cells that are adjacent in pseudotime space have similar expression values for certain genes.
+
+In this section, we will need our test set to be stored in a cell_data_set that contains the test set counts. We need this object to store the training set graph. To accomplish this, we make a copy of cds_train and only update the counts. This procedure is not applied to the naive dataset because there was no seperation of a train and test set.
+
+
+```{r} 
+cds_test.NB <- cds_train.NB
+counts(cds_test.NB) <- t(Xtest.NB)
+
+cds_test.PO <- cds_train.PO 
+counts(cds_test.PO) <- t(Xtest.PO)
+
+```
+
+We now run the graph_test() function, which is the preferred Monocle3 methodology for finding genes that vary across pseudotime.
+
+```{r, message=FALSE, results='hide'}
+ciliated_cds_pr_test_res.NB <- graph_test(cds_test.NB, neighbor_graph="principal_graph", cores=4) 
+pr_deg_ids.NB <- row.names(subset(ciliated_cds_pr_test_res.NB, q_value < 0.0005))
+
+ciliated_cds_pr_test_res.PO <- graph_test(cds_test.PO, neighbor_graph="principal_graph", cores=4) 
+pr_deg_ids.PO <- row.names(subset(ciliated_cds_pr_test_res.PO, q_value < 0.0005)) 
+
+ciliated_cds_pr_test_res.naive <- graph_test(cds.naive, neighbor_graph="principal_graph", cores=4) 
+pr_deg_ids.naive <- row.names(subset(ciliated_cds_pr_test_res.naive, q_value < 0.0005)) 
+```
+
+# Plots and visualizations
+
+The plots below show that the cells cluster nicely by their cell type in reduced dimensions. This suggests that neither Poisson nor Negative Binomial count splitting has destroyed the signal in the data.
+
+
+```{r}
+plot_cells(cds_train.NB.celltypeplot, 
+           color_cells_by = "cell.type",
+           label_groups_by_cluster=FALSE, 
+           label_cell_groups=FALSE,
+           graph_label_size=1.5
+)
+
+
+plot_cells(cds_train.PO.celltypeplot, 
+           color_cells_by = "cell.type",
+           label_groups_by_cluster=FALSE, 
+           label_cell_groups=FALSE,
+           graph_label_size=1.5
+)
+
+plot_cells(cds.naive.celltypeplot, 
+           color_cells_by = "cell.type",
+           label_groups_by_cluster=FALSE, 
+           label_cell_groups=FALSE,
+           graph_label_size=1.5)
+```
+
+
+We can also plot our learned graph with cells colored by pseudotime.
+
+
+```{r}
+plot_cells(cds_train.NB,
+           color_cells_by = "pseudotime",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,
+           graph_label_size=1.5)
+
+plot_cells(cds_train.PO,
+           color_cells_by = "pseudotime",
+           label_cell_groups=FALSE,
+           label_leaves=FALSE,
+           label_branch_points=FALSE,
+           graph_label_size=1.5)
+
+plot_cells(cds.naive,
            color_cells_by = "pseudotime",
            label_cell_groups=FALSE,
            label_leaves=FALSE,
@@ -122,60 +262,90 @@ plot_cells(cds_train,
            graph_label_size=1.5)
 ```
 
-# Finding genes that are differentially expressed across pseudotime
 
-Now that we have estimated pseudotime using the training set, we are ready to study differential expression along pseudotime. In this section, we rely on the pseudotime from the training set but we rely on the test set counts for differential expression analysis.
-
-## By hand
-
-First, we carry out differential expression testing "by hand". We fit a quasipoisson GLM of each test set gene onto the pseudotime computed from the training set. (We choose quasipoisson since this is the default family for the `fit_models()` function in Monocle3.) For computational efficiency, we only do this for the first 500 genes. We include the size factors estimated on the training as offsets in the regression.
-
-```{r}
-pseudotime.train <- pseudotime(cds_train)
-sf.train <- colData(cds_train)$Size_Factor
-results <- apply(Xtest[1:500,], 1, function(u) summary(glm(u~pseudotime.train, offset = log(sf.train), family="quasipoisson"))$coefficients[2,2])
-head(results, n=10)
-```
-
-The results above show the differential expression p-value for each of the first 10 genes in the dataset.  
-
-## Using Monocle3's Graph Test
-
-This section follows the "finding genes that change as a function of pseudotime" [section](https://cole-trapnell-lab.github.io/monocle3/docs/differential/#pseudo-dep) of the Monocle3 vignette. The differential expression testing method recommended in the Monocle3 tutorial is `graph_test()`, which uses Moran's I statistics to test if cells that are adjacent in pseudotime space have similar expression values for certain genes. 
-
-In this section, we will need our test set to be stored in a `cell_data_set` that contains the test set counts. We need this object to store the training set graph. To accomplish this, we make a copy of `cds_train` and only update the counts.  
-
-```{r} 
-cds_test <- cds_train 
-counts(cds_test) <- Xtest 
-```
-
-We now run the `graph_test` function, which is the preferred Monocle3 methodology for finding genes that vary across pseudotime.
-
-```{r, message=FALSE, results='hide'}
-ciliated_cds_pr_test_res <- graph_test(cds_test, neighbor_graph="principal_graph", cores=4) 
-pr_deg_ids <- row.names(subset(ciliated_cds_pr_test_res, q_value < 0.0005)) 
-```
-
-Here are a couple of interesting genes that score as highly significant according to `graph_test()`, both in our analysis and in the analysis in the Monocle3 vignette. We can see that the expression levels of these genes do vary a lot in pseudotime space (these genes are highly expressed in very specific regions of the graph). 
+Here are a couple of interesting genes that score as highly significant according to graph_test(), both in our analysis and in the analysis in the Monocle3 vignette. We can see that the expression levels of these genes vary substantially across pseudotime space (these genes are highly expressed in very specific regions of the graph).
 
 ```{r, results='hide'}
-plot_cells(cds_test, genes=c("hlh-4", "gcy-8", "dac-1", "oig-8"), 
+plot_cells(cds_test.NB, genes=c("hlh-4", "gcy-8", "dac-1", "oig-8"), 
           show_trajectory_graph=FALSE, 
            label_cell_groups=FALSE, 
            label_leaves=FALSE) 
-``` 
 
-We can also select specific genes and plot their expression across pseudotime. As in the Monocle3 vignette, we see that all three of these genes get "activated" midway through the trajectory, but `dac-1` is activated slightly before the others. 
 
-```{r}
-AFD_genes <- c("gcy-8", "dac-1", "oig-8")
-AFD_lineage_cds <- cds_test[rowData(cds_test)$gene_short_name %in% AFD_genes, 
-                       colData(cds_test)$cell.type %in% c("AFD")]
-plot_genes_in_pseudotime(AFD_lineage_cds,                          color_cells_by="embryo.time.bin",min_expr=0.5) 
+plot_cells(cds_test.PO, genes=c("hlh-4", "gcy-8", "dac-1", "oig-8"), 
+          show_trajectory_graph=FALSE, 
+           label_cell_groups=FALSE, 
+           label_leaves=FALSE) 
+
+plot_cells(cds.naive, genes=c("hlh-4", "gcy-8", "dac-1", "oig-8"), 
+          show_trajectory_graph=FALSE, 
+           label_cell_groups=FALSE, 
+           label_leaves=FALSE) 
 ```
 
 
-The analysis in this tutorial identifies differentially expressed genes without double dipping in the data, and thus improves upon the analysis in the  Monocle3 [vignette](https://cole-trapnell-lab.github.io/monocle3/docs/trajectories/). 
+We can also select specific genes and plot their expression across pseudotime. As in the Monocle3 vignette, we see that all three of these genes get activated midway through the trajectory, with dac-1 activating slightly earlier.
+
+
+```{r}
+genes <- c("gcy-8", "dac-1", "oig-8")
+
+# NB test
+AFD_lineage_cds.NB.test <- cds_test.NB[rowData(cds_test.NB)$gene_short_name %in% genes, 
+                       colData(cds_test.NB)$cell.type %in% c("AFD")]
+plot_genes_in_pseudotime(AFD_lineage_cds.NB.test, color_cells_by="embryo.time.bin",min_expr=0.5) + ggtitle("Negative Binomial") 
+
+
+# PO test
+AFD_lineage_cds.PO.test <- cds_test.PO[rowData(cds_test.PO)$gene_short_name %in% genes, 
+                       colData(cds_test.PO)$cell.type %in% c("AFD")]
+plot_genes_in_pseudotime(AFD_lineage_cds.PO.test, color_cells_by="embryo.time.bin",min_expr=0.5) + ggtitle("Poisson")
+
+
+# naive
+AFD_lineage_cds.naive <- cds.naive[rowData(cds.naive)$gene_short_name %in% genes, 
+                       colData(cds.naive)$cell.type %in% c("AFD")]
+plot_genes_in_pseudotime(AFD_lineage_cds.naive, color_cells_by="embryo.time.bin",min_expr=0.5) + ggtitle("Naive")
+```
+
+
+The analysis in this tutorial identifies differentially expressed genes without double dipping in the data, and and thus avoids double dipping in the data, providing a more statistically principled alternative to the Monocle3 vignette analysis.
+
+To further confirm the signal has been preserved, we calculate the pseudotime correlations between the Naive and Negative Binomial methods and the Naive and Poisson methods. This was calculated over ten trials each and over three different epsilon splits (20/80, 50/50, and 80/20). Across each epsilon fit, it was found that the Naive and Poisson pseudotime correlations were greater than that of the Naive and Negative Binomial pseudotime correlations. This was expected as Poisson countsplit preserves the signal slightly more effectively than Negative Binomial countsplit.
+
+
+```{r}
+#load("pseudotime_correlation_distributions")
+
+#ggplot(df, aes(x = eps, y = value, fill = model)) +
+#  geom_boxplot(outlier.size = 0.1, alpha = 0.7) +
+#  labs(
+#    x = "Epsilon split",
+#    y = "Pseudotime correlation",
+#    fill = "Model"
+#  ) +
+#  theme_minimal()
+```
+
+
+We also calculate the correlations of specific gene expressions across the various methods to confirm that the cells highlighted in one UMAP correlate to the highlighted cells in the others.
+
+
+```{r}
+hlh <- rownames(cds.naive)[rowData(cds.naive)$gene_short_name == "hlh-4"]
+gcy <- rownames(cds.naive)[rowData(cds.naive)$gene_short_name == "gcy-8"]
+dac <- rownames(cds.naive)[rowData(cds.naive)$gene_short_name == "dac-1"]
+oig <- rownames(cds.naive)[rowData(cds.naive)$gene_short_name == "oig-8"]
+
+
+cor(cds.naive_matrix[,gcy], Xtest.NB[,gcy])
+
+cor(cds.naive_matrix[,gcy], Xtest.PO[,gcy])
+
+cor(cds.naive_matrix[,gcy], Xtrain.NB[,gcy])
+
+cor(cds.naive_matrix[,gcy], Xtrain.PO[,gcy])
+```
+
 
 

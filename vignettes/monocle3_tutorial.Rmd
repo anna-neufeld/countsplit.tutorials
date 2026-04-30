@@ -156,7 +156,7 @@ Now that we have estimated pseudotime using the training set, we are ready to st
 First, we carry out differential expression testing “by hand”. We fit a quasi-Poisson GLM of each test set gene onto the pseudotime computed from the training set. (We choose quasipoisson since this is the default family for the fit_models() function in Monocle3.) For computational efficiency, we only do this for the first 500 genes. We include the size factors estimated on the training set as offsets in the regression.
 
 
-```{r}
+```{r,warning=FALSE}
 pseudotime.train.NB <- pseudotime(cds_train.NB)
 sf.train.NB <- colData(cds_train.NB)$Size_Factor
 results.NB <- apply(Xtest.NB[,1:500], 2, function(u) summary(glm(u~pseudotime.train.NB, offset = log(sf.train.NB), family="quasipoisson"))$coefficients[2,2])

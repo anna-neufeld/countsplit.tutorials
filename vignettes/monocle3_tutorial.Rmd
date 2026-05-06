@@ -64,7 +64,7 @@ This pipeline assumes that the data are reasonably close to following a Poisson 
 
 We now follow the preprocessing and pseudotime steps from the Monocle3 tutorial to come up with pseudotime estimates. Except for the naive case, everything in this section uses the training set only.
 
-```{r}
+```{r, message=FALSE, warning=FALSE}
 cds_train.NB <- preprocess_cds(cds_train.NB, num_dim = 50)
 cds_train.NB <- align_cds(
   cds_train.NB, 
@@ -196,7 +196,7 @@ counts(cds_test.PO) <- t(Xtest.PO)
 
 We now run the graph_test() function, which is the preferred Monocle3 methodology for finding genes that vary across pseudotime.
 
-```{r, message=FALSE, results='hide'}
+```{r, message=FALSE,warning=FALSE, results='hide'}
 ciliated_cds_pr_test_res.NB <- graph_test(cds_test.NB, neighbor_graph="principal_graph", cores=4) 
 pr_deg_ids.NB <- row.names(subset(ciliated_cds_pr_test_res.NB, q_value < 0.0005))
 
@@ -212,7 +212,7 @@ pr_deg_ids.naive <- row.names(subset(ciliated_cds_pr_test_res.naive, q_value < 0
 The plots below show that the cells cluster nicely by their cell type in reduced dimensions. This suggests that neither Poisson nor Negative Binomial count splitting has destroyed the signal in the data.
 
 
-```{r}
+```{r, warning=FALSE, message=FALSE}
 plot_cells(cds_train.NB.celltypeplot, 
            color_cells_by = "cell.type",
            label_groups_by_cluster=FALSE, 
@@ -239,7 +239,7 @@ plot_cells(cds.naive.celltypeplot,
 We can also plot our learned graph with cells colored by pseudotime.
 
 
-```{r}
+```{r, warning=FALSE}
 plot_cells(cds_train.NB,
            color_cells_by = "pseudotime",
            label_cell_groups=FALSE,
@@ -287,7 +287,7 @@ plot_cells(cds.naive, genes=c("hlh-4", "gcy-8", "dac-1", "oig-8"),
 We can also select specific genes and plot their expression across pseudotime. As in the Monocle3 vignette, we see that all three of these genes get activated midway through the trajectory, with dac-1 activating slightly earlier.
 
 
-```{r}
+```{r, warning=FALSE}
 genes <- c("gcy-8", "dac-1", "oig-8")
 
 # NB test
@@ -309,29 +309,13 @@ plot_genes_in_pseudotime(AFD_lineage_cds.naive, color_cells_by="embryo.time.bin"
 ```
 
 
-The analysis in this tutorial identifies differentially expressed genes without double dipping in the data, and and thus avoids double dipping in the data, providing a more statistically principled alternative to the Monocle3 vignette analysis.
+The analysis in this tutorial identifies differentially expressed genes without double dipping in the data, and thus avoids double dipping in the data, providing a more statistically principled alternative to the Monocle3 vignette analysis.
 
-To further confirm the signal has been preserved, we calculate the pseudotime correlations between the Naive and Negative Binomial methods and the Naive and Poisson methods. This was calculated over ten trials each and over three different epsilon splits (20/80, 50/50, and 80/20). Across each epsilon fit, it was found that the Naive and Poisson pseudotime correlations were greater than that of the Naive and Negative Binomial pseudotime correlations. This was expected as Poisson countsplit preserves the signal slightly more effectively than Negative Binomial countsplit.
-
-
-```{r}
-#load("pseudotime_correlation_distributions")
-
-#ggplot(df, aes(x = eps, y = value, fill = model)) +
-#  geom_boxplot(outlier.size = 0.1, alpha = 0.7) +
-#  labs(
-#    x = "Epsilon split",
-#    y = "Pseudotime correlation",
-#    fill = "Model"
-#  ) +
-#  theme_minimal()
-```
-
-
-We also calculate the correlations of specific gene expressions across the various methods to confirm that the cells highlighted in one UMAP correlate to the highlighted cells in the others.
+To further confirm the signal has been preserved, we also calculate the correlations of specific gene expressions across the various methods to confirm that the cells highlighted in one UMAP correlate to the highlighted cells in the others.
 
 
 ```{r}
+
 hlh <- rownames(cds.naive)[rowData(cds.naive)$gene_short_name == "hlh-4"]
 gcy <- rownames(cds.naive)[rowData(cds.naive)$gene_short_name == "gcy-8"]
 dac <- rownames(cds.naive)[rowData(cds.naive)$gene_short_name == "dac-1"]
@@ -346,6 +330,5 @@ cor(cds.naive_matrix[,gcy], Xtrain.NB[,gcy])
 
 cor(cds.naive_matrix[,gcy], Xtrain.PO[,gcy])
 ```
-
 
 
